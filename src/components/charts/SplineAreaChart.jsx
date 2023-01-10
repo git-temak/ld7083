@@ -11,6 +11,7 @@ const SplineAreaChart = ({
   dateExtra = false,
   yFormatter = null,
   type = "area",
+  scaleFactor = 10,
 }) => {
   const chartConfig = {
     series: yval,
@@ -71,6 +72,8 @@ const SplineAreaChart = ({
       description={description}
       width={width}
       type={type}
+      scaleFactor={scaleFactor}
+      useScale={scaleFactor}
     />
   );
 };

@@ -13,11 +13,11 @@ const PeriodTabsContainer = styled(FlexContainer)`
 `;
 
 const CardsContainer = styled.div`
-  ${tw`gap-x-3 my-5 grid grid-cols-4 justify-between 2xl:w-4/5 mx-auto`}
+  ${tw`gap-x-3 my-5 space-y-5 lg:space-y-0 lg:grid lg:grid-cols-4 justify-between 2xl:w-4/5 mx-auto`}
 `;
 
 const CardWrapper = styled.div`
-  ${tw`bg-white rounded-[8px] h-[150px] w-[300px] pt-[40px] px-5 cursor-pointer`};
+  ${tw`bg-white rounded-[8px] h-[150px] w-full mx-auto pt-[40px] px-5`};
   border: 0.4px solid rgba(19, 76, 128, 0.4);
   .number {
     ${tw`text-solid font-bold text-3xl`}
@@ -27,7 +27,8 @@ const CardWrapper = styled.div`
     ${tw`text-[#555555] text-sm mt-2`}
   }
 
-  ${({ id }) => {
+  ${({ id, number }) => {
+    if (!number || number === "N/A") return;
     switch (id) {
       case "overview-3":
         return `
@@ -50,23 +51,23 @@ const CardWrapper = styled.div`
                 color: white;
             }
             `;
+      case "deaths-3-dec":
       case "cases-3-dec":
         return `
-              background: #9F0000;
+              background: ${number > 0 ? "#9F0000" : "#038A00"};
               .text, .number{
                 color: white;
             }
             `;
-      case "deaths-3":
+      case "deaths-0":
+      case "healthcare-0":
         return `
               background: #134C80;
-              color: white !important;
+              .text, .number{
+                color: white;
+            }
             `;
-      case "healthcare-3":
-        return `
-              background: #134C80;
-              color: white !important;
-            `;
+      default:
     }
   }}
 `;
@@ -76,20 +77,28 @@ const DataCard = ({
   number = 0,
   id = "",
   icon,
+  symbol = "",
   clickHandler = () => null,
 }) => {
+  const showCardExtras = !!number && number !== "N/A";
   return (
-    <CardWrapper id={id}>
+    <CardWrapper id={id} number={number}>
       <FlexContainer className="gap-x-2">
-        <p className="number">{number?.toLocaleString()}</p>
-        {icon}
+        <p className="number">
+          {number?.toLocaleString() + (showCardExtras ? symbol : "")}
+        </p>
+        {showCardExtras && icon}
       </FlexContainer>
       <p className="text">{text}</p>
     </CardWrapper>
   );
 };
 
-const MetricsSection = ({ cardsDetails = [], clickHandler = () => null }) => {
+const MetricsSection = ({
+  cardsDetails = [],
+  clickHandler = () => null,
+  showFilters = true,
+}) => {
   const [periodTab, setPeriodTab] = useState(0);
   const tabOptions = Object.freeze([
     {
@@ -149,20 +158,21 @@ const MetricsSection = ({ cardsDetails = [], clickHandler = () => null }) => {
       default:
     }
     clickHandler(endDate);
-    console.log({ endDate });
   };
 
   return (
     <MetricsWrapper>
-      <PeriodTabsContainer>
-        {tabOptions.map((period, idx) => (
-          <PeriodTab
-            key={period.text}
-            {...period}
-            handler={() => handleDateRange(idx)}
-          />
-        ))}
-      </PeriodTabsContainer>
+      {showFilters && (
+        <PeriodTabsContainer>
+          {tabOptions.map((period, idx) => (
+            <PeriodTab
+              key={period.text}
+              {...period}
+              handler={() => handleDateRange(idx)}
+            />
+          ))}
+        </PeriodTabsContainer>
+      )}
       <CardsContainer>
         {cardsDetails.map((card) => (
           <DataCard {...card} key={card.text} />

@@ -5,14 +5,15 @@ import {
   MetricsSection,
   PageContainer,
   BarChart,
-  FlexContainer,
   LineChart,
-  AreaChart,
   SplineAreaChart,
   PieChart,
-  ChartWrapper,
   ChartsContainer,
+  FlexContainerRes,
+  ChartWrapperHalf,
+  ChartWrapperOneQuarter,
 } from "../components";
+import { chartMultiSeries } from "../utils";
 
 const Overview = () => {
   const { getOverviewChartsData, getOverviewCardData } = useApiRequest();
@@ -46,20 +47,7 @@ const Overview = () => {
     },
   ]);
 
-  const healthcareChartData = {
-    yval: Object.entries(healthcares).map(([country, value]) => ({
-      name: country,
-      data: value.slice(0, 500).map((d) => d.value),
-    })),
-    xval: [
-      ...new Set(
-        Object.values(healthcares)
-          .slice(0, 500)
-          .flat()
-          .map((v) => v.date)
-      ),
-    ],
-  };
+  const healthcareChartData = chartMultiSeries(healthcares);
 
   /*************
    * Functions
@@ -84,7 +72,6 @@ const Overview = () => {
 
   useEffect(() => {
     loadData();
-    console.log("Rendering overview page...");
   }, []);
   return (
     <PageContainer>
@@ -93,8 +80,8 @@ const Overview = () => {
         clickHandler={updateChartDataByDate}
       />
       <ChartsContainer>
-        <FlexContainer className="w-full gap-x-7 mt-7">
-          <ChartWrapper className="w-1/2 bg-primarygray h-[500px]">
+        <FlexContainerRes className="w-full gap-x-7 mt-7">
+          <ChartWrapperHalf>
             <LineChart
               dateExtra
               title="Deaths from COVID-19"
@@ -105,8 +92,8 @@ const Overview = () => {
                 yval: deaths.slice(0, 500).map((d) => d.value || 0),
               }}
             />
-          </ChartWrapper>
-          <ChartWrapper className="w-1/2 ">
+          </ChartWrapperHalf>
+          <ChartWrapperHalf>
             <BarChart
               title="COVID-19 cases by age"
               ylabel="Cases"
@@ -116,37 +103,39 @@ const Overview = () => {
                 yval: Object.values(ageCases),
               }}
             />
-          </ChartWrapper>
-        </FlexContainer>
-        <FlexContainer className="w-full gap-x-7 mt-7">
-          <ChartWrapper className="w-1/4">
+          </ChartWrapperHalf>
+        </FlexContainerRes>
+        <FlexContainerRes className="gap-x-7 mt-7">
+          <ChartWrapperOneQuarter>
             <BarChart
               horizontal={true}
               data={{
                 xval: vaccines.map((d) => d.dose),
                 yval: vaccines.map((d) => `${d.value / 1000000}M`),
               }}
-              ylabel="Dose"
+              ylabel="Doses"
               title="Number of people vaccinated based on dose"
               description="An overview of the number of vaccinations given based on first, second, third dose or booster."
             />
-          </ChartWrapper>
-          <ChartWrapper className="w-1/2">
+          </ChartWrapperOneQuarter>
+          <ChartWrapperHalf>
             <SplineAreaChart
+              ylabel="Admissions"
               dateExtra
               data={healthcareChartData}
               title="Patients admitted to hospital based on region"
               description="An overview of the total number of COVID-19 patients admitted to the hospital since the start of pandemic based on states in the UK."
             />
-          </ChartWrapper>
-          <ChartWrapper className="w-1/4">
+          </ChartWrapperHalf>
+          <ChartWrapperOneQuarter>
             <PieChart
+              ylabel="Cases"
               data={infections}
               title="COVID-19 cases by occurence of infection"
               description="Total number of cases since the start of pandemic based on first infections and reinfections."
             />
-          </ChartWrapper>
-        </FlexContainer>
+          </ChartWrapperOneQuarter>
+        </FlexContainerRes>
       </ChartsContainer>
     </PageContainer>
   );

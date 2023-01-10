@@ -19,6 +19,7 @@ const Chart = ({
   height = "370px",
   config,
   scaleFactor = 12,
+  useScale = false,
 }) => {
   return (
     <ChartContainer>
@@ -27,11 +28,12 @@ const Chart = ({
       <ChartLib
         {...config}
         type={type}
-        width={`${
-          config.options?.xaxis?.categories?.length > 15
-            ? config.options?.xaxis?.categories?.length * scaleFactor
-            : 100
-        }%`}
+        // width={`${
+        //   config.options?.xaxis?.categories?.length > 15
+        //     ? config.options?.xaxis?.categories?.length * scaleFactor
+        //     : 100
+        // }%`}
+        width={useScale ? `${scaleFactor * 100}px` : "100%"}
         height={height}
       />
     </ChartContainer>

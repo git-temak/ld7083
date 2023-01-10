@@ -6,6 +6,7 @@ import {
   DropdownSelect,
   Flex,
   FlexBetween,
+  FlexBetweenRes,
   FlexCol,
   FlexContainer,
   Loader,
@@ -36,7 +37,7 @@ const LogoWrapper = styled(FlexBetween)`
   ${tw`p-5`}
 `;
 
-const ActionBar = styled(FlexBetween)`
+const ActionBar = styled(FlexBetweenRes)`
   ${tw`my-4 px-[2rem] 2xl:w-4/5 mx-auto`}
 `;
 
@@ -57,7 +58,7 @@ const DisclaimerWrapper = styled.div`
 `;
 
 const AppLayout = () => {
-  const { loading } = useContext(appContext);
+  const { loading, lastUpdate } = useContext(appContext);
 
   // title text options
   const pathTexts = Object.freeze({
@@ -81,7 +82,7 @@ const AppLayout = () => {
         <HeaderWrapper>
           <LogoWrapper>
             <Logo />
-            <DataUpdateText>Last Updated: 11th Nov, 2022.</DataUpdateText>
+            <DataUpdateText>Last Updated: {lastUpdate}.</DataUpdateText>
           </LogoWrapper>
           <NavBar />
         </HeaderWrapper>
@@ -103,7 +104,7 @@ const AppLayout = () => {
                 label="Location"
                 options={[{ label: "All of UK", value: "all" }]}
               />
-              <SearchInput />
+              {/* <SearchInput /> */}
             </Utils>
           </ActionBar>
           <Outlet />

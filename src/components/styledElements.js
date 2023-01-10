@@ -3,6 +3,11 @@ import tw, { styled } from "twin.macro";
 export const FlexContainer = styled.div`
   ${tw`flex items-center`}
 `;
+
+export const FlexContainerRes = styled.div`
+  ${tw`w-full lg:flex items-center space-y-5 lg:space-y-0 lg:gap-x-7`}
+`;
+
 export const FlexItemsEnd = styled.div`
   ${tw`flex items-end`}
 `;
@@ -15,12 +20,20 @@ export const FlexBetween = styled(FlexContainer)`
   ${tw`justify-between`}
 `;
 
+export const FlexBetweenRes = styled(FlexContainerRes)`
+  ${tw`justify-between`}
+`;
+
 export const FlexCol = styled.div`
   ${tw`flex flex-col`}
 `;
 
 export const Flex = styled.div`
   ${tw`flex`}
+`;
+
+export const FlexRes = styled.div`
+  ${tw`w-full lg:flex`}
 `;
 
 export const Label = styled.label`
@@ -59,4 +72,16 @@ export const ChartsContainer = styled.section`
 
 export const ChartWrapper = styled.div`
   ${tw`bg-primarygray h-[520px]`}
+`;
+
+export const ChartWrapperFull = styled.div`
+  ${tw`bg-primarygray h-[520px] w-full`}
+`;
+
+export const ChartWrapperHalf = styled.div`
+  ${tw`bg-primarygray h-[520px] w-full lg:w-1/2`}
+`;
+
+export const ChartWrapperOneQuarter = styled.div`
+  ${tw`bg-primarygray h-[520px] w-full lg:w-1/4`}
 `;

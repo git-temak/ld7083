@@ -11,6 +11,7 @@ const ColumnChart = ({
   ylabel = "yaxis",
   stacked = false,
   dateExtra,
+  scaleFactor = false,
 }) => {
   const chartConfig = {
     series: yval,
@@ -99,7 +100,8 @@ const ColumnChart = ({
       width={width}
       type="bar"
       height={horizontal ? "300px" : "370px"}
-      scaleFactor={15}
+      scaleFactor={20}
+      useScale={scaleFactor}
     />
   );
 };

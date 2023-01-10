@@ -15,6 +15,7 @@ const PieChart = ({
         type: "pie",
       },
       labels: data.map((d) => d.label),
+      legend: { position: "bottom" },
       responsive: [
         {
           breakpoint: 480,

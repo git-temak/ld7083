@@ -3,18 +3,18 @@ import { appContext } from "../contexts";
 import AppService from "../services/appService";
 import {
   filterForDate,
-  formatDeaths,
   formatAgecases,
-  formatHealthcare,
   formatVaccineData,
   formatVaccineDemo,
   extractCompleteVacc,
   getDataSum,
+  formatDataToMonthAgg,
+  formatByRegion,
+  formatByAge,
 } from "../utils";
 
 const useApiRequest = () => {
   const {
-    lastUpdate,
     setLastUpdate,
     deathState,
     setDeathState,
@@ -25,14 +25,13 @@ const useApiRequest = () => {
     metricsState,
     setMetricsState,
     setLoading,
+    caseState,
+    setCaseState,
+    healthcareState,
+    setHealthcareState,
   } = useContext(appContext);
 
-  const getOverview = async () => {
-    try {
-      const data = await AppService.getOverview();
-      return data;
-    } catch (error) {}
-  };
+  setLastUpdate(new Date().toString().slice(0, 33));
 
   const getOverviewCardData = async (date = "", refetch = false) => {
     let caseData = [],
@@ -130,17 +129,6 @@ const useApiRequest = () => {
           value: getDataSum(filterForDate(deathDist, date)),
         };
 
-        // console.log("Testing overview cards", {
-        //   ageCaseDist,
-        //   healthcareDist,
-        //   deathDist,
-        //   deathData,
-        //   vaccineData,
-        //   caseData,
-        //   healthcareData,
-        //   vaccineDist,
-        // });
-
         setMetricsState({
           ...metricsState,
           cumData: {
@@ -160,7 +148,7 @@ const useApiRequest = () => {
         vaccines: vaccineData?.value,
       };
     } catch (error) {
-      console.log({ error });
+      console.log(error.stack);
       return;
     } finally {
       setLoading(false);
@@ -237,7 +225,7 @@ const useApiRequest = () => {
         ageCaseDist = overviewState.ageCaseDist;
 
         // if (!date) {
-        deaths = formatDeaths(overviewState.deaths);
+        deaths = formatDataToMonthAgg(overviewState.deaths);
         ageCases = overviewState.ageCases;
         healthcares = overviewState.healthcares;
         firstDose = overviewState.firstDose;
@@ -261,7 +249,6 @@ const useApiRequest = () => {
         // healthcares = overviewState.healthcares;
         // }
       } else {
-        console.log("Will refetch");
         // age cases
         const { data: _ageCaseDist = [] } = await AppService.getCases({
           cumValue: false,
@@ -273,15 +260,16 @@ const useApiRequest = () => {
         const { data: _deaths } = await AppService.getDeaths({
           cumValue: false,
         });
-        deaths = formatDeaths(_deaths);
+        deaths = formatDataToMonthAgg(_deaths);
 
         // healthcare data
         const { data: _healthcares } = await AppService.getHealthcare({
           cumValue: false,
+          nation: true,
           date,
         });
 
-        healthcares = formatHealthcare(_healthcares);
+        healthcares = formatByRegion(_healthcares, "areaName");
 
         setOverviewState({
           cumHealthcares: _healthcares,
@@ -334,7 +322,7 @@ const useApiRequest = () => {
       };
       return overview;
     } catch (error) {
-      console.log({ error });
+      console.log(error.stack);
     } finally {
       setLoading(false);
     }
@@ -461,7 +449,7 @@ const useApiRequest = () => {
         thirdDose: thirdDoseData?.value,
       };
     } catch (error) {
-      console.log({ error });
+      console.log(error.stack);
     } finally {
       setLoading(false);
     }
@@ -577,16 +565,6 @@ const useApiRequest = () => {
           : {};
       }
 
-      // console.log("data cached 2: ", {
-      //   date,
-      //   byDate,
-      //   belowTo50,
-      //   above50,
-      //   vaccineDemoData,
-      //   byAges,
-      //   monthlyVaccines,
-      // });
-
       return {
         byDate,
         byAges,
@@ -595,18 +573,564 @@ const useApiRequest = () => {
         monthlyVaccines,
       };
     } catch (error) {
-      console.log({ error });
+      console.log(error.stack);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCasesOverview = async (date = "", refetch = false) => {
+    let total = {},
+      firstEpisodes = {},
+      reinfections = {},
+      rate = {};
+    setLoading(true);
+    try {
+      if ((!caseState?.overview && !caseState?.newData && !date) || refetch) {
+        const { data: _totalData } = await AppService.getCases({
+          cumValue: true,
+        });
+        total = _totalData[0].value;
+
+        const { data: _reinfections } = await AppService.getReinfections({
+          cumValue: true,
+        });
+        reinfections = _reinfections[0].value;
+
+        const { data: _firstEpisodes } = await AppService.getFirstEpisodes({
+          cumValue: true,
+        });
+        firstEpisodes = _firstEpisodes[0].value;
+
+        const { data: caseRate } = await AppService.getCases({
+          cumValue: true,
+          rate: true,
+        });
+        rate = caseRate[0]?.value;
+
+        setCaseState({
+          ...caseState,
+          overview: {
+            ...caseState?.overview,
+            total,
+            reinfections,
+            firstEpisodes,
+            rate,
+          },
+        });
+      } else if (caseState?.overview) {
+        if (!date) {
+          total = caseState?.overview?.total;
+          reinfections = caseState?.overview?.reinfections;
+          firstEpisodes = caseState?.overview?.firstEpisodes;
+          rate = caseState?.overview?.rate || caseState?.newData?.rate;
+        } else {
+          const { caseDist, reinfectionsDist, firstEpisodesDist } =
+            caseState.newData;
+
+          total = getDataSum(filterForDate(caseDist, date));
+          reinfections = getDataSum(filterForDate(reinfectionsDist, date));
+          firstEpisodes = getDataSum(filterForDate(firstEpisodesDist, date));
+          rate = caseState?.overview?.rate || caseState?.newData?.rate;
+        }
+      } else {
+        const { data: caseDist = [] } = await AppService.getCases({
+          cumValue: false,
+          newCases: true,
+        });
+
+        const { data: reinfectionsDist } = await AppService.getReinfections({
+          cumValue: false,
+          newCases: true,
+        });
+
+        const { data: firstEpisodesDist } = await AppService.getFirstEpisodes({
+          cumValue: false,
+          newCases: true,
+        });
+
+        total = getDataSum(filterForDate(caseDist, date));
+        reinfections = getDataSum(filterForDate(reinfectionsDist, date));
+        firstEpisodes = getDataSum(filterForDate(firstEpisodesDist, date));
+
+        if (caseState?.overview?.rate) {
+          rate = caseState?.overview?.rate || caseState?.newData?.rate;
+        } else {
+          const { data: caseRate } = await AppService.getCases({
+            cumValue: true,
+            rate: true,
+          });
+          rate = caseRate[0]?.value;
+        }
+
+        setCaseState({
+          ...caseState,
+          newData: {
+            ...caseState.newData,
+            caseDist,
+            reinfectionsDist,
+            firstEpisodesDist,
+            rate,
+          },
+        });
+      }
+
+      return { total, reinfections, firstEpisodes, rate };
+    } catch (error) {
+      console.log(error.stack);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCasesChartData = async (date = "") => {
+    setLoading(true);
+    let caseTypes = {},
+      byAge = [],
+      byRegion = [],
+      monthlyCases = [];
+    try {
+      if (caseState?.cumData) {
+        const {
+          cumFirstEpisodesDist,
+          cumReinfectionsDist,
+          cumAgeDist,
+          cumAge,
+        } = caseState.cumData || {};
+
+        caseTypes = {
+          "First Episode": formatDataToMonthAgg(cumFirstEpisodesDist),
+          Reinfections: formatDataToMonthAgg(cumReinfectionsDist),
+        };
+        byAge = formatAgecases(cumAgeDist);
+        byRegion = formatByRegion(cumAge);
+        monthlyCases = formatDataToMonthAgg(cumAge, false);
+      } else {
+        const { data: cumReinfectionsDist } = await AppService.getReinfections({
+          cumValue: false,
+        });
+
+        const { data: cumFirstEpisodesDist } =
+          await AppService.getFirstEpisodes({
+            cumValue: false,
+          });
+
+        const { data: cumAgeDist = [] } = await AppService.getCases({
+          cumValue: false,
+          ageDemo: true,
+        });
+
+        const { data: cumAge = [] } = await AppService.getCases({
+          cumValue: false,
+          nation: true,
+          newCases: true,
+        });
+
+        caseTypes = {
+          "First Episode": formatDataToMonthAgg(cumFirstEpisodesDist),
+          Reinfections: formatDataToMonthAgg(cumReinfectionsDist),
+        };
+        byAge = formatAgecases(cumAgeDist);
+        byRegion = formatByRegion(cumAge);
+        monthlyCases = formatDataToMonthAgg(cumAge, false);
+
+        setCaseState({
+          ...caseState,
+          cumData: {
+            ...caseState?.cumData,
+            cumFirstEpisodesDist,
+            cumReinfectionsDist,
+            cumAgeDist,
+            cumAge,
+          },
+        });
+      }
+
+      return {
+        caseTypes,
+        byAge,
+        byRegion,
+        monthlyCases,
+      };
+    } catch (error) {
+      console.log(error.stack);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDeathsOverview = async (date = "", refetch = false) => {
+    setLoading(true);
+    let total = {},
+      within60 = {},
+      within28 = {},
+      rate = {};
+    try {
+      if ((!deathState?.overview && !deathState?.newData && !date) || refetch) {
+        const { data: deaths } = await AppService.getDeaths({
+          cumValue: true,
+        });
+        total = deaths[0]?.value;
+
+        const { data: cum28 } = await AppService.getDeaths({
+          cumValue: true,
+          within28: true,
+        });
+        within28 = cum28[0]?.value;
+
+        const { data: cum60 } = await AppService.getDeaths({
+          cumValue: true,
+          within60: true,
+        });
+        within60 = cum60[0]?.value;
+
+        const { data: deathRate } = await AppService.getDeaths({
+          cumValue: true,
+          rate: true,
+        });
+        rate = deathRate[0]?.value;
+
+        setDeathState({
+          ...deathState,
+          overview: {
+            ...deathState?.overview,
+            total,
+            within28,
+            within60,
+            rate,
+          },
+        });
+      } else if (deathState?.overview) {
+        if (!date) {
+          total = deathState?.overview?.total;
+          within28 = deathState?.overview?.within28;
+          within60 = deathState?.overview?.within60;
+          rate = deathState?.overview?.rate;
+        } else {
+          const { deathsDist, within28Dist, within60Dist } = deathState.newData;
+
+          total = getDataSum(filterForDate(deathsDist, date));
+          within28 = getDataSum(filterForDate(within28Dist, date));
+          within60 = getDataSum(filterForDate(within60Dist, date));
+          rate = deathState?.overview?.rate;
+        }
+      } else {
+        const { data: deathsDist } = await AppService.getDeaths({
+          cumValue: false,
+          newDeaths: true,
+        });
+
+        const { data: within28Dist } = await AppService.getDeaths({
+          cumValue: false,
+          within28: true,
+        });
+
+        const { data: within60Dist } = await AppService.getDeaths({
+          cumValue: false,
+          within28: true,
+        });
+
+        total = getDataSum(filterForDate(deathsDist, date));
+        within28 = getDataSum(filterForDate(within28Dist, date));
+        within60 = getDataSum(filterForDate(within60Dist, date));
+        if (deathState?.overview?.rate) {
+          rate = deathState?.overview?.rate;
+        } else {
+          const { data: deathRate } = await AppService.getDeaths({
+            cumValue: true,
+            rate: true,
+          });
+          rate = deathRate[0]?.value;
+        }
+
+        setDeathState({
+          ...deathState,
+          newData: {
+            ...deathState.newData,
+            deathsDist,
+            within28Dist,
+            within60Dist,
+          },
+        });
+      }
+
+      return {
+        total,
+        within28,
+        within60,
+        rate,
+      };
+    } catch (error) {
+      console.log(error.stack);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDeathsChartData = async (date = "", refetch = false) => {
+    setLoading(true);
+    let deaths = [],
+      byAge = [],
+      within28 = [],
+      within28Demo = [],
+      within60 = [],
+      within60Demo = [];
+    try {
+      if (deathState?.cumData) {
+        const {
+          deathsDist,
+          within28DemoDist,
+          within28Dist,
+          within60Dist,
+          within60DemoDist,
+        } = deathState?.cumData;
+
+        deaths = formatDataToMonthAgg(deathsDist, false);
+        within28Demo = formatByAge(within28DemoDist, "deaths");
+        within28 = formatDataToMonthAgg(within28Dist, false);
+        within60Demo = formatByAge(within60DemoDist, "deaths");
+        within60 = formatDataToMonthAgg(within60Dist, false);
+      } else {
+        const { data: deathsDist } = await AppService.getDeaths({
+          cumValue: false,
+          newDeaths: true,
+        });
+
+        const { data: within28Dist } = await AppService.getDeaths({
+          cumValue: false,
+          within28: true,
+        });
+
+        const { data: within60Dist } = await AppService.getDeaths({
+          cumValue: false,
+          within60: true,
+        });
+
+        const { data: within28DemoDist } = await AppService.getDeaths({
+          cumValue: false,
+          demo: true,
+          within28: true,
+        });
+        const { data: within60DemoDist } = [];
+
+        deaths = formatDataToMonthAgg(deathsDist, false);
+        within28Demo = formatByAge(within28DemoDist, "deaths");
+        within28 = formatDataToMonthAgg(within28Dist, false);
+        within60Demo = formatByAge(within60DemoDist, "deaths");
+        within60 = formatDataToMonthAgg(within60Dist, false);
+
+        setDeathState({
+          ...deathState,
+          cumData: {
+            ...deathState?.cumData,
+            deathsDist,
+            within28DemoDist,
+            within28Dist,
+            within60Dist,
+            within60DemoDist,
+          },
+        });
+      }
+
+      return {
+        byAge,
+        deaths,
+        within28,
+        within28Demo,
+        within60,
+        within60Demo,
+      };
+    } catch (error) {
+      console.log(error.stack);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getHealthcareOverview = async (date = "", refetch = false) => {
+    setLoading(true);
+    let total = {},
+      ventilationBeds = {},
+      inHospital = {},
+      rate = {};
+    try {
+      if (
+        (!healthcareState?.overview && !healthcareState?.newData && !date) ||
+        refetch
+      ) {
+        const { data: healthcare } = await AppService.getHealthcare({
+          cumValue: true,
+        });
+        total = healthcare[0]?.value;
+
+        const { data: ventilation } = await AppService.getHealthcare({
+          cumValue: true,
+          ventilation: true,
+        });
+        ventilationBeds = ventilation[0]?.value;
+
+        const { data: healthcareRate } = await AppService.getHealthcare({
+          cumValue: true,
+          rate: true,
+        });
+        rate = healthcareRate[0]?.value;
+
+        const { data: hospital } = await AppService.getHealthcare({
+          cumValue: true,
+          hospital: true,
+        });
+        inHospital = hospital[0]?.value;
+
+        setHealthcareState({
+          ...healthcareState,
+          overview: {
+            ...healthcareState?.overview,
+            total,
+            ventilationBeds,
+            inHospital,
+            rate,
+          },
+        });
+      } else if (deathState?.overview) {
+        if (!date) {
+          total = healthcareState?.overview?.total;
+          ventilationBeds = healthcareState?.overview?.ventilationBeds;
+          inHospital = healthcareState?.overview?.inHospital;
+          rate = healthcareState?.overview?.rate;
+        } else {
+          const { healthcareDist } = healthcareState.newData || {};
+
+          total = getDataSum(filterForDate(healthcareDist, date));
+          ventilationBeds = healthcareState?.overview?.ventilationBeds;
+          inHospital = healthcareState?.overview?.inHospital;
+          rate = healthcareState?.overview?.rate;
+        }
+      } else {
+        const { data: healthcareDist } = await AppService.getHealthcare({
+          cumValue: false,
+          newAdm: true,
+        });
+        const { data: ventilationDist } = await AppService.getHealthcare({
+          cumValue: false,
+          ventilation: true,
+          newAdm: true,
+        });
+        const { data: hospitalDist } = await AppService.getHealthcare({
+          cumValue: false,
+          hospital: true,
+          newAdm: true,
+        });
+
+        const { data: ageDist } = await AppService.getHealthcare({
+          cumValue: false,
+          age: true,
+        });
+
+        total = getDataSum(filterForDate(healthcareDist, date));
+        ventilationBeds = getDataSum(filterForDate(ventilationDist, date));
+        inHospital = healthcareState?.overview?.inHospital;
+        rate = healthcareState?.overview?.rate;
+
+        setHealthcareState({
+          ...healthcareState,
+          newData: {
+            ...healthcareState.newData,
+            healthcareDist,
+            ventilationDist,
+            hospitalDist,
+            ageDist,
+          },
+        });
+      }
+
+      return {
+        total,
+        ventilationBeds,
+        inHospital,
+        rate,
+      };
+    } catch (error) {
+      console.log(error.stack);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getHealthcareChartData = async () => {
+    setLoading(true);
+    let allAds = [],
+      ventilationBed = [],
+      inHospital = [],
+      byAge = [];
+    try {
+      if (healthcareState?.cumData || healthcareState?.newData) {
+        const { healthcareDist, ventilationDist, hospitalDist, ageDist } =
+          healthcareState.cumData || healthcareState.newData;
+        allAds = formatDataToMonthAgg(healthcareDist, false);
+        ventilationBed = formatDataToMonthAgg(ventilationDist, false);
+        inHospital = formatDataToMonthAgg(hospitalDist, false);
+        byAge = formatByAge(ageDist, "value", true);
+      } else {
+        const { data: healthcareDist } = await AppService.getHealthcare({
+          cumValue: false,
+          newAdm: true,
+        });
+        const { data: ventilationDist } = await AppService.getHealthcare({
+          cumValue: false,
+          ventilation: true,
+          newAdm: true,
+        });
+        const { data: hospitalDist } = await AppService.getHealthcare({
+          cumValue: false,
+          hospital: true,
+          newAdm: true,
+        });
+        const { data: ageDist } = await AppService.getHealthcare({
+          cumValue: false,
+          age: true,
+        });
+
+        allAds = formatDataToMonthAgg(healthcareDist, false);
+        ventilationBed = formatDataToMonthAgg(ventilationDist, false);
+        inHospital = formatDataToMonthAgg(hospitalDist, false);
+        byAge = formatByAge(ageDist, "value", true);
+
+        setHealthcareState({
+          ...healthcareState,
+          ...healthcareState?.cumData,
+          cumData: {
+            healthcareDist,
+            ventilationDist,
+            hospitalDist,
+            ageDist,
+          },
+        });
+      }
+
+      return {
+        ventilationBed,
+        inHospital,
+        allAds,
+        byAge,
+      };
+    } catch (error) {
+      console.log(error.stack);
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    getOverview,
     getOverviewCardData,
     getOverviewChartsData,
     getVaccineOverview,
     getVaccinationCardData,
+    getCasesOverview,
+    getCasesChartData,
+    getDeathsOverview,
+    getDeathsChartData,
+    getHealthcareOverview,
+    getHealthcareChartData,
   };
 };
 

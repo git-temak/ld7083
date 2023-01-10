@@ -3,32 +3,33 @@ export const filterForDate = (data = [], date = "") => {
   return data.filter((d) => new Date(d.date) >= new Date(date));
 };
 
-export const formatHealthcare = (_healthcares) => {
+export const formatByRegion = (data, areaKey = "name") => {
   // healthcare data
-  const aggHealthcares = {};
-  _healthcares.forEach((h) => {
-    if (h.areaName in aggHealthcares) {
-      if (h.date.slice(0, 7) in aggHealthcares[h.areaName]) {
-        aggHealthcares[h.areaName][h.date.slice(0, 7)] = greaterVal(
+  const initResult = {};
+  data.forEach((h) => {
+    if (h[areaKey] in initResult) {
+      if (h.date.slice(0, 7) in initResult[h[areaKey]]) {
+        initResult[h[areaKey]][h.date.slice(0, 7)] = greaterVal(
           h.value,
-          aggHealthcares[h.areaName][h.date.slice(0, 7)]
+          initResult[h[areaKey]][h.date.slice(0, 7)]
         );
       } else {
-        aggHealthcares[h.areaName][h.date.slice(0, 7)] = h.value;
+        initResult[h[areaKey]][h.date.slice(0, 7)] = h.value;
       }
     } else {
-      aggHealthcares[h.areaName] = {};
-      aggHealthcares[h.areaName][h.date.slice(0, 7)] = h.value;
+      initResult[h[areaKey]] = {};
+      initResult[h[areaKey]][h.date.slice(0, 7)] = h.value;
     }
   });
-  const healthcares = {};
-  Object.entries(aggHealthcares).forEach(([areaName, data]) => {
-    healthcares[areaName] = Object.entries(data).map(([key, value]) => ({
+
+  const result = {};
+  Object.entries(initResult).forEach(([areaName, data]) => {
+    result[areaName] = Object.entries(data).map(([key, value]) => ({
       date: key,
       value,
     }));
   });
-  return healthcares;
+  return result;
 };
 
 export const formatVaccineData = (data) => {
@@ -48,7 +49,23 @@ export const formatVaccineData = (data) => {
   return result;
 };
 
+export const formatByAge = (data, valueKey = "deaths", isCum = false) => {
+  if (!data) return [];
+  const result = {};
+  data?.forEach((c) => {
+    c?.value?.forEach((d) => {
+      if (d.age in result)
+        result[d.age] = isCum
+          ? greaterVal(d[valueKey], result[d.age])
+          : result[d.age] + d[valueKey];
+      else result[d.age] = d[valueKey];
+    });
+  });
+  return result;
+};
+
 export const formatAgecases = (ageCaseDist) => {
+  if (!ageCaseDist) return [];
   const ageCases = {};
   ageCaseDist?.forEach((c) => {
     c?.value?.forEach((d) => {
@@ -147,14 +164,13 @@ export const formatVaccineDemoPerc = (data) => {
   return initResult;
 };
 
-export const formatDeaths = (data) => {
+export const formatDataToMonthAgg = (data, isCum = true) => {
   const initResult = {};
   data.forEach((d) => {
     if (d.date.slice(0, 7) in initResult) {
-      initResult[d.date.slice(0, 7)] = greaterVal(
-        initResult[d.date.slice(0, 7)],
-        d.value
-      );
+      initResult[d.date.slice(0, 7)] = isCum
+        ? greaterVal(initResult[d.date.slice(0, 7)], d.value)
+        : initResult[d.date.slice(0, 7)] + d.value;
     } else {
       initResult[d.date.slice(0, 7)] = d.value;
     }
@@ -189,6 +205,23 @@ export const extractCompleteVacc = (data) => {
     };
   });
   return result;
+};
+
+export const chartMultiSeries = (data, y = "value", x = "date") => {
+  if (!data) return [];
+  return {
+    yval: Object.entries(data).map(([key, value]) => ({
+      name: key,
+      data: value.map((d) => d[y]),
+    })),
+    xval: [
+      ...new Set(
+        Object.values(data)
+          .flat()
+          .map((v) => v[x])
+      ),
+    ],
+  };
 };
 
 export const greaterVal = (a, b) => (a > b ? a : b);

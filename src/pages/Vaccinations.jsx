@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import {
   BarChart,
   ChartsContainer,
-  ChartWrapper,
+  ChartWrapperHalf,
+  ChartWrapperFull,
   ColumnChart,
   FlexContainer,
   MetricsSection,
   PageContainer,
   SplineAreaChart,
+  FlexContainerRes,
 } from "../components";
 import { useApiRequest } from "../hooks";
 import { decToFixed } from "../utils";
@@ -79,16 +81,6 @@ const Vaccinations = () => {
     ],
   };
 
-  console.log({
-    refinedVaccbyDate,
-    byAges,
-    refinedVaccineDemo,
-    vaccineOverview,
-    refinedBelow50,
-    belowTo50,
-    monthlyVaccines,
-  });
-
   const cardsDetails = Object.freeze([
     {
       number: vaccineOverview?.total ?? "N/A",
@@ -116,7 +108,6 @@ const Vaccinations = () => {
     const chartsData = await getVaccinationCardData("", true);
     const data = await getVaccineOverview("", true);
 
-    console.log({ chartsData });
     if (data) setVaccineOverview(data);
     if (chartsData) {
       setChartData(chartsData);
@@ -133,7 +124,6 @@ const Vaccinations = () => {
 
   useEffect(() => {
     loadData();
-    console.log("Rendering vacc page...");
   }, []);
   return (
     <PageContainer>
@@ -142,28 +132,30 @@ const Vaccinations = () => {
         clickHandler={updateChartDataByDate}
       />
       <ChartsContainer>
-        <FlexContainer className="w-full gap-x-7 mt-7">
-          <ChartWrapper className="w-1/2 bg-primarygray h-[500px]">
+        <FlexContainerRes className="gap-x-7 mt-7">
+          <ChartWrapperHalf>
             <ColumnChart
               dateExtra
+              scaleFactor
               data={refinedVaccbyDate}
               stacked
               title="Vaccinations given by vaccination date"
               ylabel="Vaccinations"
               description="An overview on vaccines given to people based on dose types and date."
             />
-          </ChartWrapper>
-          <ChartWrapper className="w-1/2 ">
+          </ChartWrapperHalf>
+          <ChartWrapperHalf>
             <ColumnChart
+              scaleFactor
               data={refinedVaccineDemo}
-              title="Vaccine intake by age and sex"
-              ylabel="Cases"
+              title="Vaccine intake by age"
+              ylabel="Vaccinations"
               description="An overview of the total number of COVID-19 vaccines given since the start of pandemic based on age and sex. "
             />
-          </ChartWrapper>
-        </FlexContainer>
-        <FlexContainer className="w-full gap-x-7 mt-7">
-          <ChartWrapper className="w-1/2 bg-primarygray h-[500px]">
+          </ChartWrapperHalf>
+        </FlexContainerRes>
+        <FlexContainerRes className="gap-x-7 mt-7">
+          <ChartWrapperHalf>
             <SplineAreaChart
               type="line"
               dateExtra
@@ -175,8 +167,8 @@ const Vaccinations = () => {
               ylabel="Vaccinations"
               description="A visualization overview of the number of COVID’19 vaccine doses given to people aged 0-49 based on the dose type."
             />
-          </ChartWrapper>
-          <ChartWrapper className="w-1/2 ">
+          </ChartWrapperHalf>
+          <ChartWrapperHalf>
             <SplineAreaChart
               type="line"
               data={refinedAbove50}
@@ -185,13 +177,13 @@ const Vaccinations = () => {
                 return val.toLocaleString();
               }}
               title="Vaccine dose intake by people aged 51 & above"
-              ylabel="Cases"
+              ylabel="Vaccinations"
               description="A visualization overview of the number of COVID’19 vaccine doses given to people aged 51+ based on the dose type."
             />
-          </ChartWrapper>
-        </FlexContainer>
-        <FlexContainer className="w-full gap-x-7 mt-7">
-          <ChartWrapper className="w-full bg-primarygray h-[500px]">
+          </ChartWrapperHalf>
+        </FlexContainerRes>
+        <FlexContainerRes className="gap-x-7 mt-7">
+          <ChartWrapperFull>
             <BarChart
               dateExtra
               data={{
@@ -205,8 +197,8 @@ const Vaccinations = () => {
               ylabel="Vaccinations"
               description="An overview on the monthly increase of COVID-19 complete vaccinations over the years since the start of pandemic."
             />
-          </ChartWrapper>
-        </FlexContainer>
+          </ChartWrapperFull>
+        </FlexContainerRes>
       </ChartsContainer>
     </PageContainer>
   );

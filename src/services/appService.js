@@ -2,14 +2,15 @@ import axiosInstance from "../core/api/baseAxios";
 
 class AppService {
   static async getCases({ cumValue = false, ...data }) {
-    const { ageDemo = false, newCases = false } = data || {};
-    const today = new Date();
-    const todaysDate = `${
-      today.getFullYear() - today.getMonth() + 1 - today.getDate()
-    }`;
+    const {
+      ageDemo = false,
+      newCases = false,
+      nation = false,
+      rate = false,
+    } = data || {};
 
     const params = {
-      filters: `areaType=nation`,
+      filters: `areaType=overview`,
       latestBy: "cumCasesByPublishDate",
       structure: {
         date: "date",
@@ -20,11 +21,17 @@ class AppService {
     };
 
     if (ageDemo) {
+      params.filters = "areaType=nation";
       params.structure.value = "newCasesBySpecimenDateAgeDemographics";
     }
     if (!cumValue && newCases) {
       params.structure.value = "newCasesByPublishDate";
     }
+    if (rate) {
+      params.structure.value = "newCasesByPublishDateChangePercentage";
+      params.latestBy = "newCasesByPublishDateChangePercentage";
+    }
+    if (nation) params.filters = "areaType=nation";
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
@@ -36,7 +43,15 @@ class AppService {
   }
 
   static async getDeaths({ cumValue = false, ...data }) {
-    const { rate = false, date = "", newDeaths = false } = data;
+    const {
+      rate = false,
+      date = "",
+      newDeaths = false,
+      within28 = false,
+      within60 = false,
+      demo = false,
+    } = data;
+
     const params = {
       filters: "areaType=overview",
       latestBy: "cumOnsDeathsByRegistrationDate",
@@ -46,10 +61,43 @@ class AppService {
         value: "cumOnsDeathsByRegistrationDate",
       },
     };
-    if (rate) params.structure.value = "cumOnsDeathsByRegistrationDateRate";
+    if (rate) {
+      params.structure.value = "cumOnsDeathsByRegistrationDateRate";
+      params.latestBy = "cumOnsDeathsByRegistrationDateRate";
+    }
     if (date && cumValue) params.filters += `;date=${date}`;
     if (newDeaths && !cumValue)
       params.structure.value = "newOnsDeathsByRegistrationDate";
+
+    if (within28 && !cumValue) {
+      params.structure.value = "newDeaths28DaysByDeathDate";
+      params.latestBy = "newDeaths28DaysByDeathDate";
+    } else if (within28 && cumValue) {
+      params.structure.value = "cumDeaths28DaysByDeathDate";
+      params.latestBy = "cumDeaths28DaysByDeathDate";
+    }
+
+    if (within60 && !cumValue) {
+      params.structure.value = "newDeaths60DaysByDeathDate";
+      params.latestBy = "newDeaths60DaysByDeathDate";
+      params.filters = "areaType=nation";
+    } else if (within60 && cumValue) {
+      params.structure.value = "newDeaths60DaysByDeathDate";
+      params.latestBy = "newDeaths60DaysByDeathDate";
+      params.filters = "areaType=nation";
+    }
+
+    if (demo) {
+      params.filters = "areaType=nation";
+
+      if (within28 && !cumValue) {
+        params.structure.value = "newDeaths28DaysByDeathDateAgeDemographics";
+        params.latestBy = "newDeaths28DaysByDeathDateAgeDemographics";
+      } else if (within60 && !cumValue) {
+        params.structure.value = "newDeaths60DaysByDeathDateAgeDemographics";
+        params.latestBy = "newDeaths60DaysByDeathDateAgeDemographics";
+      }
+    }
 
     const endpoint =
       "?" +
@@ -88,7 +136,6 @@ class AppService {
         first: "weeklyPeopleVaccinatedFirstDoseByVaccinationDate",
         second: "weeklyPeopleVaccinatedSecondDoseByVaccinationDate",
       });
-      console.log("Will use weekly points");
     }
 
     const params = {
@@ -139,7 +186,16 @@ class AppService {
     return req?.data || req;
   }
 
-  static async getHealthcare({ cumValue = false, date = "", newAdm = false }) {
+  static async getHealthcare({
+    cumValue = false,
+    date = "",
+    newAdm = false,
+    ventilation = false,
+    hospital = false,
+    nation = false,
+    age = false,
+    rate = false,
+  }) {
     const params = {
       filters: "areaType=overview",
       latestBy: "cumAdmissions",
@@ -149,11 +205,28 @@ class AppService {
         value: "cumAdmissions",
       },
     };
-    if (!cumValue) {
+    if (!cumValue && nation) {
       params.filters = "areaType=nation";
     }
     if (date && cumValue) params.filters += `;date=${date}`;
     if (newAdm && !cumValue) params.structure.value = "newAdmissions";
+    if (ventilation) {
+      params.structure.value = "covidOccupiedMVBeds";
+      params.latestBy = "covidOccupiedMVBeds";
+    }
+    if (hospital) {
+      params.structure.value = "hospitalCases";
+      params.latestBy = "hospitalCases";
+    }
+    if (age) {
+      params.structure.value = "cumAdmissionsByAge";
+      params.latestBy = "cumAdmissionsByAge";
+      params.filters = "areaType=nation";
+    }
+    if (rate) {
+      params.structure.value = "newAdmissionsChangePercentage";
+      params.latestBy = "newAdmissionsChangePercentage";
+    }
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
@@ -164,13 +237,20 @@ class AppService {
     return req?.data || req;
   }
 
-  static async getReinfections({ cumValue = false, date = "" }) {
+  static async getReinfections({
+    cumValue = false,
+    date = "",
+    newCases = false,
+  }) {
     const params = {
-      filters: "areaType=nation",
+      filters: "areaType=overview",
       latestBy: "cumReinfectionsBySpecimenDate",
       structure: { date: "date", value: "cumReinfectionsBySpecimenDate" },
     };
     if (date && cumValue) params.filters += `;date=${date}`;
+    if (!cumValue && newCases)
+      params.structure.value = "newReinfectionsBySpecimenDate";
+
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
@@ -181,13 +261,20 @@ class AppService {
     return req?.data || req;
   }
 
-  static async getFirstEpisodes({ cumValue = false, date = "" }) {
+  static async getFirstEpisodes({
+    cumValue = false,
+    date = "",
+    newCases = false,
+  }) {
     const params = {
-      filters: "areaType=nation",
+      filters: "areaType=overview",
       latestBy: "cumFirstEpisodesBySpecimenDate",
       structure: { date: "date", value: "cumFirstEpisodesBySpecimenDate" },
     };
     if (date && cumValue) params.filters += `;date=${date}`;
+    if (!cumValue && newCases)
+      params.structure.value = "newFirstEpisodesBySpecimenDate";
+
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
@@ -197,45 +284,6 @@ class AppService {
     const req = await axiosInstance.get(endpoint);
     return req?.data || req;
   }
-
-  // Others
-  // static async getHealthcare(data) {
-  //   const config = {};
-  //   const req = await axiosInstance.get("/", config);
-  //   return req?.data || req;
-  // }
-
-  // static async getCases(data) {
-  //   const config = {};
-  //   const req = await axiosInstance.get("/", config);
-  //   return req?.data || req;
-  // }
-
-  // static async getVaccioverviews(data) {
-  //   const config = {};
-  //   const req = await axiosInstance.get("/", config);
-  //   return req?.data || req;
-  // }
-
-  // static async getDeaths(data) {
-  //   const params = {
-  //     filters: "areaType=overview",
-  //     latestBy: "cumOnsDeathsByRegistrationDate",
-  //     structure: {
-  //       date: "date",
-  //       name: "areaName",
-  //       value: "cumOnsDeathsByRegistrationDate",
-  //     },
-  //   };
-
-  //   const endpoint =
-  //     "?" +
-  //     `filters=${params.filters}&` +
-  //     `structure=${JSON.stringify(params.structure)}`;
-
-  //   const req = await axiosInstance.get(endpoint);
-  //   return req?.data || req;
-  // }
 }
 
 export default AppService;
