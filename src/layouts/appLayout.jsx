@@ -19,7 +19,7 @@ import {
 import { appContext } from "../contexts";
 
 const AppLayoutWrapper = styled(FlexCol)`
-  ${tw`w-full h-[100vh]`}
+  ${tw`w-full h-auto`}
 `;
 const HeaderWrapper = styled.header`
   ${tw`w-full`}
