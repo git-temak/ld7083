@@ -112,7 +112,7 @@ const Healthcare = () => {
           <ChartWrapperHalf>
             <BarChart
               dateExtra
-              title="Total patients admitted on ventilation beds overtime"
+              title="Total patients admitted on ventilation beds over time"
               ylabel="Admissions"
               description="Patients admitted into ventilation bed"
               data={{
@@ -124,7 +124,7 @@ const Healthcare = () => {
           <ChartWrapperHalf>
             <BarChart
               dateExtra
-              title="Total patients admitted in hospital overtime"
+              title="Total patients admitted in hospital over time"
               ylabel="Admissions"
               description="Patients in hospitals over time"
               data={{

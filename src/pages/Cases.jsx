@@ -36,7 +36,7 @@ const Cases = () => {
     },
     {
       number: overviewData?.firstEpisodes || "N/A",
-      text: "First COVID-19 Infections",
+      text: "First COVID-19 infections",
     },
     {
       number: overviewData?.reinfections || "N/A",

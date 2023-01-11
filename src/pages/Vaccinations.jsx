@@ -196,7 +196,7 @@ const Vaccinations = () => {
               yFormatter={(val = 0) => {
                 return val.toLocaleString();
               }}
-              title="Overview of Monthly complete vaccinations"
+              title="Overview of monthly complete vaccinations"
               ylabel="Vaccinations"
               description="An overview on the monthly increase of COVID-19 complete vaccinations over the years since the start of pandemic."
             />
