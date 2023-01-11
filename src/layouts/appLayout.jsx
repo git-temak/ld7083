@@ -86,7 +86,7 @@ const AppLayout = () => {
         <HeaderWrapper>
           <LogoWrapper>
             <Logo />
-            <DataUpdateText>Last Updated: {lastUpdate}.</DataUpdateText>
+            <DataUpdateText>Last Updated: {lastUpdate}</DataUpdateText>
           </LogoWrapper>
           <NavBar />
         </HeaderWrapper>
