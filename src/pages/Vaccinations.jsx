@@ -104,6 +104,8 @@ const Vaccinations = () => {
   /*************
    * Functions
    *************/
+
+  // fetches cards and chart data on page initial render
   const loadData = async () => {
     const chartsData = await getVaccinationCardData("", true);
     const data = await getVaccineOverview("", true);
@@ -114,6 +116,7 @@ const Vaccinations = () => {
     }
   };
 
+  // filters data by provided date
   const updateChartDataByDate = async (date) => {
     const filteredByDate = await getVaccinationCardData(date);
     const filteredCardByDate = await getVaccineOverview(date);

@@ -85,3 +85,10 @@ export const ChartWrapperHalf = styled.div`
 export const ChartWrapperOneQuarter = styled.div`
   ${tw`bg-primarygray h-[520px] w-full lg:w-1/4`}
 `;
+
+export const AppLayoutWrapper = styled(FlexCol)`
+  ${tw`w-full h-auto`}
+`;
+export const HeaderWrapper = styled.header`
+  ${tw`w-full`}
+`;

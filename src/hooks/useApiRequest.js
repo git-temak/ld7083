@@ -31,7 +31,7 @@ const useApiRequest = () => {
     setHealthcareState,
   } = useContext(appContext);
 
-  setLastUpdate(new Date().toString().slice(0, 24));
+  setLastUpdate(new Date().toString().slice(0, 25));
 
   const getOverviewCardData = async (date = "", refetch = false) => {
     let caseData = [],

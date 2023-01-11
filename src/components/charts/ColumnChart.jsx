@@ -39,11 +39,17 @@ const ColumnChart = ({
           },
         },
       ],
+      dataLabels: {
+        enabled: false,
+      },
       plotOptions: {
         bar: {
           horizontal: false,
           borderRadius: stacked ? 0 : 5,
           dataLabels: {
+            enabled: false,
+            hideOverflowingLabels: true,
+            enabledOnSeries: false,
             total: {
               // enabled: true,
               style: {
@@ -51,6 +57,9 @@ const ColumnChart = ({
                 fontWeight: 900,
                 marginBottom: 20,
               },
+            },
+            formatter: function (val, opt) {
+              return "";
             },
           },
         },

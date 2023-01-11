@@ -1,6 +1,7 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
-import { Outlet, useLocation, useParams } from "react-router-dom";
+import { MdKeyboardArrowRight } from "react-icons/md";
+import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import tw, { styled } from "twin.macro";
 import {
   DropdownSelect,
@@ -15,15 +16,10 @@ import {
   SearchInput,
   TitleText,
   YSpacer,
+  AppLayoutWrapper,
+  HeaderWrapper,
 } from "../components";
 import { appContext } from "../contexts";
-
-const AppLayoutWrapper = styled(FlexCol)`
-  ${tw`w-full h-auto`}
-`;
-const HeaderWrapper = styled.header`
-  ${tw`w-full`}
-`;
 
 const PageContentWrapper = styled.section`
   ${tw``}
@@ -42,7 +38,11 @@ const ActionBar = styled(FlexBetweenRes)`
 `;
 
 const Utils = styled(Flex)`
-  ${tw`gap-x-5`}
+  ${tw`gap-x-5`};
+
+  // .more-icon:hover + .info-div {
+  //   ${tw`absolute block`}
+  // }
 `;
 
 const DisclaimerWrapper = styled.div`
@@ -57,8 +57,12 @@ const DisclaimerWrapper = styled.div`
   }
 `;
 
+const InfoContainer = styled.div`
+  ${tw`border bg-[#1D6FB8] text-white w-[400px] p-5  absolute right-0 top-[2.5rem] rounded-[8px]`}
+`;
 const AppLayout = () => {
   const { loading, lastUpdate } = useContext(appContext);
+  const [showInfo, setShowInfo] = useState(false);
 
   // title text options
   const pathTexts = Object.freeze({
@@ -92,12 +96,38 @@ const AppLayout = () => {
           <ActionBar>
             <TitleText>{title} within the UK</TitleText>
             <Utils>
-              <FlexContainer className="gap-x-1">
+              <FlexContainer className="gap-x-1 relative">
                 <DropdownSelect
                   label="Disease"
-                  options={[{ label: "COVID19", value: "COVID19" }]}
+                  options={[{ label: "COVID-19", value: "COVID19" }]}
                 />
-                <FaInfoCircle size={15} color="#134C80" />
+                <FaInfoCircle
+                  size={15}
+                  color="#134C80"
+                  className="more-icon"
+                  onMouseOver={() => setShowInfo(true)}
+                />
+                {showInfo && (
+                  <InfoContainer
+                    className="info-div"
+                    onMouseOver={() => setShowInfo(true)}
+                    onMouseOut={() => setShowInfo(false)}
+                  >
+                    <p className="text-sm">
+                      The COVID-19 pandemic, also known as the coronavirus
+                      pandemic, is an ongoing global pandemic of coronavirus
+                      disease 2019 (COVID-19) caused by severe acute respiratory
+                      syndrome coronavirus 2 (SARS-CoV-2).
+                      <br />
+                      <Link
+                        className="font-bold italic flex text-base"
+                        to={"/info"}
+                      >
+                        Learn More <MdKeyboardArrowRight size={20} />{" "}
+                      </Link>
+                    </p>
+                  </InfoContainer>
+                )}
               </FlexContainer>
 
               <DropdownSelect
