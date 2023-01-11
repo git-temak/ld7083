@@ -488,28 +488,28 @@ const useApiRequest = () => {
         const aggAges = formatVaccineDemo(vaccineDemo, "", true);
         belowTo50 = aggAges
           ? {
-              "05_11": aggAges["05_11"],
-              "12_15": aggAges["12_15"],
-              "16_17": aggAges["16_17"],
-              "18_24": aggAges["18_24"],
-              "25_29": aggAges["25_29"],
-              "30_34": aggAges["30_34"],
-              "35_39": aggAges["35_39"],
-              "40_44": aggAges["40_44"],
-              "45_49": aggAges["45_49"],
+              "05-11": aggAges["05_11"],
+              "12-15": aggAges["12_15"],
+              "16-17": aggAges["16_17"],
+              "18-24": aggAges["18_24"],
+              "25-29": aggAges["25_29"],
+              "30-34": aggAges["30_34"],
+              "35-39": aggAges["35_39"],
+              "40-44": aggAges["40_44"],
+              "45-49": aggAges["45_49"],
             }
           : {};
 
         above50 = aggAges
           ? {
-              "50_54": aggAges["50_54"],
-              "55_59": aggAges["55_59"],
-              "60_64": aggAges["60_64"],
-              "65_69": aggAges["65_69"],
-              "70_74": aggAges["70_74"],
-              "75_79": aggAges["75_79"],
-              "80_84": aggAges["80_84"],
-              "85_89": aggAges["85_89"],
+              "50-54": aggAges["50_54"],
+              "55-59": aggAges["55_59"],
+              "60-64": aggAges["60_64"],
+              "65-69": aggAges["65_69"],
+              "70-74": aggAges["70_74"],
+              "75-79": aggAges["75_79"],
+              "80-84": aggAges["80_84"],
+              "85-89": aggAges["85_89"],
               "90+": aggAges["90+"],
             }
           : {};
@@ -538,28 +538,28 @@ const useApiRequest = () => {
         const aggAges = formatVaccineDemo(vaccineDemo, "", true);
         belowTo50 = aggAges
           ? {
-              "05_11": aggAges["05_11"],
-              "12_15": aggAges["12_15"],
-              "16_17": aggAges["16_17"],
-              "18_24": aggAges["18_24"],
-              "25_29": aggAges["25_29"],
-              "30_34": aggAges["30_34"],
-              "35_39": aggAges["35_39"],
-              "40_44": aggAges["40_44"],
-              "45_49": aggAges["45_49"],
+              "05-11": aggAges["05_11"],
+              "12-15": aggAges["12_15"],
+              "16-17": aggAges["16_17"],
+              "18-24": aggAges["18_24"],
+              "25-29": aggAges["25_29"],
+              "30-34": aggAges["30_34"],
+              "35-39": aggAges["35_39"],
+              "40-44": aggAges["40_44"],
+              "45-49": aggAges["45_49"],
             }
           : {};
 
         above50 = aggAges
           ? {
-              "50_54": aggAges["50_54"],
-              "55_59": aggAges["55_59"],
-              "60_64": aggAges["60_64"],
-              "65_69": aggAges["65_69"],
-              "70_74": aggAges["70_74"],
-              "75_79": aggAges["75_79"],
-              "80_84": aggAges["80_84"],
-              "85_89": aggAges["85_89"],
+              "50-54": aggAges["50_54"],
+              "55-59": aggAges["55_59"],
+              "60-64": aggAges["60_64"],
+              "65-69": aggAges["65_69"],
+              "70-74": aggAges["70_74"],
+              "75-79": aggAges["75_79"],
+              "80-84": aggAges["80_84"],
+              "85-89": aggAges["85_89"],
               "90+": aggAges["90+"],
             }
           : {};
