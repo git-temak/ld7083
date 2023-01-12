@@ -9,7 +9,7 @@
     },
     {
       "src": "../src/assets/icons/logo.svg",
-      "type": "image/png",
+      "type": "image/svg",
       "sizes": "192x192"
     },
     {
