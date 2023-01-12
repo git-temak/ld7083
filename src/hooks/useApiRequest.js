@@ -38,7 +38,7 @@ const useApiRequest = () => {
   } = useContext(appContext);
 
   // update the data time call upon using any of the functions in the hook, this is used to display the last updated time
-  setLastUpdate(new Date().toString().slice(0, 33));
+  setLastUpdate(new Date().toString().slice(0, 25));
 
   // extract and returns data for all cards rendered on overview page
   const getOverviewCardData = async (date = "", refetch = false) => {
