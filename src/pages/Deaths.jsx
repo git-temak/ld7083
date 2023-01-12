@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   BarChart,
   ChartsContainer,
@@ -13,11 +13,15 @@ import { useApiRequest } from "../hooks";
 import ArrowUp from "../assets/icons/arrow-up.svg";
 import ArrowDown from "../assets/icons/arrow-down.svg";
 import { chartAgeSeries } from "../utils";
+import { appContext } from "../contexts";
 
 const Deaths = () => {
   /*************
    * States
    *************/
+  const { areaName } = useContext(appContext);
+  const [filterDate, setFilterDate] = useState();
+
   const { getDeathsOverview, getDeathsChartData } = useApiRequest();
   const [overviewData, setOverviewData] = useState();
   const [chartData, setChartData] = useState();
@@ -66,17 +70,21 @@ const Deaths = () => {
     if (chartData) setChartData(chartData);
   };
 
-  const updateChartDataByDate = async (date) => {
-    const filteredByDate = await getDeathsOverview(date);
-    const chartData = await getDeathsChartData(date);
+  const updateChartDataByDate = async (date, refetch = false) => {
+    const filteredByDate = await getDeathsOverview(date, refetch);
+    const chartData = await getDeathsChartData(date, refetch);
     setOverviewData(filteredByDate);
     setChartData(chartData);
+    setFilterDate(date);
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    updateChartDataByDate(filterDate, true);
+  }, [areaName]);
   return (
     <PageContainer>
       <MetricsSection

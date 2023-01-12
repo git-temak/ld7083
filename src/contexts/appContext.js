@@ -12,6 +12,7 @@ export const AppProvider = ({ children }) => {
   const [overviewState, setOverviewState] = useState();
   const [loading, setLoading] = useState(false);
   const [metricsState, setMetricsState] = useState(false);
+  const [areaName, setAreaName] = useState("England");
 
   const values = {
     lastUpdate,
@@ -32,6 +33,8 @@ export const AppProvider = ({ children }) => {
     setLoading,
     metricsState,
     setMetricsState,
+    areaName,
+    setAreaName,
   };
   return <appContext.Provider value={values}>{children}</appContext.Provider>;
 };

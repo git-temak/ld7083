@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   BarChart,
   ChartsContainer,
@@ -13,8 +13,12 @@ import { useApiRequest } from "../hooks";
 import ArrowUp from "../assets/icons/arrow-up.svg";
 import ArrowDown from "../assets/icons/arrow-down.svg";
 import { chartMultiSeries } from "../utils";
+import { appContext } from "../contexts";
 
 const Cases = () => {
+  const { areaName } = useContext(appContext);
+  const [filterDate, setFilterDate] = useState();
+
   const { getCasesOverview, getCasesChartData } = useApiRequest();
   const [overviewData, setOverviewData] = useState();
   const [chartData, setChartData] = useState();
@@ -66,16 +70,21 @@ const Cases = () => {
     if (chartData) setChartData(chartData);
   };
 
-  const updateChartDataByDate = async (date) => {
-    const filteredByDate = await getCasesOverview(date);
-    const chartData = await getCasesChartData(date);
+  const updateChartDataByDate = async (date, refetch = false) => {
+    const filteredByDate = await getCasesOverview(date, refetch);
+    const chartData = await getCasesChartData(date, refetch);
     setOverviewData(filteredByDate);
     setChartData(chartData);
+    setFilterDate(date);
   };
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    updateChartDataByDate(filterDate, true);
+  }, [areaName]);
   return (
     <PageContainer>
       <MetricsSection

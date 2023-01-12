@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   BarChart,
   ChartsContainer,
@@ -11,10 +11,14 @@ import {
   SplineAreaChart,
   FlexContainerRes,
 } from "../components";
+import { appContext } from "../contexts";
 import { useApiRequest } from "../hooks";
 import { chartMultiSeries, decToFixed } from "../utils";
 
 const Vaccinations = () => {
+  const { areaName } = useContext(appContext);
+  const [filterDate, setFilterDate] = useState();
+
   const { getVaccinationChartData, getVaccineOverview } = useApiRequest();
   const [vaccineOverview, setVaccineOverview] = useState();
   const [chartData, setChartData] = useState();
@@ -94,9 +98,9 @@ const Vaccinations = () => {
   };
 
   // filters data by provided date
-  const updateChartDataByDate = async (date) => {
-    const filteredByDate = await getVaccinationChartData(date);
-    const filteredCardByDate = await getVaccineOverview(date);
+  const updateChartDataByDate = async (date, refetch = false) => {
+    const filteredByDate = await getVaccinationChartData(date, refetch);
+    const filteredCardByDate = await getVaccineOverview(date, refetch);
 
     setChartData(filteredByDate);
     setVaccineOverview(filteredCardByDate);
@@ -105,6 +109,10 @@ const Vaccinations = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    updateChartDataByDate(filterDate, true);
+  }, [areaName]);
 
   return (
     <PageContainer>
@@ -174,7 +182,7 @@ const Vaccinations = () => {
               yFormatter={(val = 0) => {
                 return val.toLocaleString();
               }}
-              title="Overview of monthly complete vaccinations"
+              title="Overview of Monthly complete vaccinations"
               ylabel="Vaccinations"
               description="An overview on the monthly increase of COVID-19 complete vaccinations over the years since the start of pandemic."
             />

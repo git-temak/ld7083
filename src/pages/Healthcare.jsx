@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   BarChart,
   ChartsContainer,
@@ -13,11 +13,15 @@ import { useApiRequest } from "../hooks";
 import ArrowUp from "../assets/icons/arrow-up.svg";
 import ArrowDown from "../assets/icons/arrow-down.svg";
 import { chartAgeSeries } from "../utils";
+import { appContext } from "../contexts";
 
 const Healthcare = () => {
   /*************
    * States
    *************/
+  const { areaName } = useContext(appContext);
+  const [filterDate, setFilterDate] = useState();
+
   const { getHealthcareOverview, getHealthcareChartData } = useApiRequest();
   const [overviewData, setOverviewData] = useState();
   const [chartData, setChartData] = useState();
@@ -66,16 +70,21 @@ const Healthcare = () => {
     if (chartData) setChartData(chartData);
   };
 
-  const updateChartDataByDate = async (date) => {
-    const filteredByDate = await getHealthcareOverview(date);
-    const chartData = await getHealthcareChartData(date);
+  const updateChartDataByDate = async (date, refetch = false) => {
+    const filteredByDate = await getHealthcareOverview(date, refetch);
+    const chartData = await getHealthcareChartData(date, refetch);
     setOverviewData(filteredByDate);
     setChartData(chartData);
+    setFilterDate(date);
   };
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    updateChartDataByDate(filterDate, true);
+  }, [areaName]);
   return (
     <PageContainer>
       <MetricsSection

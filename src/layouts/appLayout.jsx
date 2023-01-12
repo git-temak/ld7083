@@ -18,6 +18,8 @@ import {
   YSpacer,
   AppLayoutWrapper,
   HeaderWrapper,
+  FlexRes,
+  LogoWrapper,
 } from "../components";
 import { appContext } from "../contexts";
 
@@ -29,16 +31,12 @@ const DataUpdateText = styled.p`
   ${tw`text-sm text-textgray`}
 `;
 
-const LogoWrapper = styled(FlexBetween)`
-  ${tw`p-5`}
-`;
-
 const ActionBar = styled(FlexBetweenRes)`
   ${tw`my-4 px-[2rem] 2xl:w-4/5 mx-auto`}
 `;
 
-const Utils = styled(Flex)`
-  ${tw`gap-x-5`};
+const Utils = styled(FlexRes)`
+  ${tw`gap-x-5 space-y-2 sm:space-y-0 sm:flex sm:w-auto`};
 
   // .more-icon:hover + .info-div {
   //   ${tw`absolute block`}
@@ -61,8 +59,16 @@ const InfoContainer = styled.div`
   ${tw`border bg-[#1D6FB8] text-white w-[400px] p-5  absolute right-0 top-[2.5rem] rounded-[8px]`}
 `;
 const AppLayout = () => {
-  const { loading, lastUpdate } = useContext(appContext);
+  const { loading, lastUpdate, areaName, setAreaName } = useContext(appContext);
   const [showInfo, setShowInfo] = useState(false);
+
+  const areaOptions = [
+    { label: "All of UK", value: "" },
+    { label: "England", value: "England" },
+    { label: "Northen Ireland", value: "Northen Ireland" },
+    { label: "Scotland", value: "Scotland" },
+    { label: "Wales", value: "Wales" },
+  ];
 
   // title text options
   const pathTexts = Object.freeze({
@@ -99,7 +105,7 @@ const AppLayout = () => {
               <FlexContainer className="gap-x-1 relative">
                 <DropdownSelect
                   label="Disease"
-                  options={[{ label: "COVID-19", value: "COVID19" }]}
+                  options={[{ label: "COVID-19", value: "covid-19" }]}
                 />
                 <FaInfoCircle
                   size={15}
@@ -120,7 +126,7 @@ const AppLayout = () => {
                       syndrome coronavirus 2 (SARS-CoV-2).
                       <br />
                       <Link
-                        className="font-bold italic flex text-base"
+                        className="font-bold italic flex text-base underline"
                         to={"/info"}
                       >
                         Learn More <MdKeyboardArrowRight size={20} />{" "}
@@ -132,7 +138,9 @@ const AppLayout = () => {
 
               <DropdownSelect
                 label="Location"
-                options={[{ label: "All of UK", value: "all" }]}
+                options={areaOptions}
+                defaultValue={areaName}
+                changeHandler={(e) => setAreaName(e.target.value)}
               />
               {/* <SearchInput /> */}
             </Utils>

@@ -9,7 +9,7 @@ const MetricsWrapper = styled.section`
 `;
 
 const PeriodTabsContainer = styled(FlexContainer)`
-  ${tw`gap-x-3 2xl:w-4/5 mx-auto`}
+  ${tw`gap-x-3 2xl:w-4/5 mx-auto flex-wrap gap-y-2`}
 `;
 
 const CardsContainer = styled.div`

@@ -13,7 +13,7 @@ const NavWrapper = styled.nav`
 `;
 
 const NavItems = styled(FlexBetween)`
-  ${tw`w-3/5 mx-auto h-full`}
+  ${tw`w-full lg:w-3/5 mx-auto h-full px-2`}
 `;
 
 const LinkItem = styled(NavLink)`

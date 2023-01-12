@@ -13,10 +13,10 @@ import {
   formatByAge,
 } from "../utils";
 
-/****************************************************************************************************************
- * This hook returns necessary functions carrying out API calls and data manipulation required to display metric
- * card and chart information across all pages
- ***************************************************************************************************************/
+/*************************************************************************************************************
+ * This hook returns necessary functions carrying out API calls and data manipulation required to display
+ * metric cards and chart information across all pages
+ ************************************************************************************************************/
 
 const useApiRequest = () => {
   // the application state store in the app cntext
@@ -35,10 +35,51 @@ const useApiRequest = () => {
     setCaseState,
     healthcareState,
     setHealthcareState,
+    areaName,
+    setAreaName,
   } = useContext(appContext);
 
   // update the data time call upon using any of the functions in the hook, this is used to display the last updated time
   setLastUpdate(new Date().toString().slice(0, 25));
+
+  //fetches and return all vaccination dosages data based on supplied time and data mode
+  // cumValue truthy value means to return only the lastest value at the provided date, while falsy value
+  // returns all entries for each of the dosage types over time
+  const getDosages = async (date, cumValue = true) => {
+    // fetch first dose data
+    const { data: _firstDose } = await AppService.getVaccines({
+      areaName,
+      cumValue,
+      dosage: true,
+      dosageIdx: "first",
+      date,
+    });
+
+    //fetch the second does data
+    const { data: _secondDose } = await AppService.getVaccines({
+      areaName,
+      cumValue,
+      dosage: true,
+      dosageIdx: "second",
+      date,
+    });
+
+    // fetch the third injection boost data
+    const { data: _thirdDose } = await AppService.getVaccines({
+      areaName,
+      cumValue,
+      dosage: true,
+      dosageIdx: "third",
+      date,
+    });
+
+    // return the data of each of the dosage type
+    return {
+      _firstDose,
+      _secondDose,
+      _thirdDose,
+    };
+  };
 
   // extract and returns data for all cards rendered on overview page
   const getOverviewCardData = async (date = "", refetch = false) => {
@@ -53,6 +94,7 @@ const useApiRequest = () => {
       if ((!metricsState && !date) || refetch) {
         // fetch and extract total number of cases
         const { data: _caseData } = await AppService.getCases({
+          areaName,
           cumValue: true,
           date,
         });
@@ -60,6 +102,7 @@ const useApiRequest = () => {
 
         // fetch and extract total number of deaths
         const { data: _deathData } = await AppService.getDeaths({
+          areaName,
           cumValue: true,
           date,
         });
@@ -74,6 +117,7 @@ const useApiRequest = () => {
 
         // fetch and extract the total number of vaccinations given
         const { data: _vaccineData } = await AppService.getVaccines({
+          areaName,
           cumValue: true,
           date,
         });
@@ -120,6 +164,7 @@ const useApiRequest = () => {
 
         // fetch and extract the cases by age distribution over the selected date range
         const { data: ageCaseDist = [] } = await AppService.getCases({
+          areaName,
           cumValue: false,
           newCases: true,
         });
@@ -138,6 +183,7 @@ const useApiRequest = () => {
 
         // fetch and extract all vaccine distrinution over time over the selected date range
         const { data: vaccineDist } = await AppService.getVaccines({
+          areaName,
           cumValue: false,
         });
         vaccineData = {
@@ -146,6 +192,7 @@ const useApiRequest = () => {
 
         // fetch and extract the deaths over the selected date range
         const { data: deathDist } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
           newDeaths: true,
         });
@@ -181,39 +228,11 @@ const useApiRequest = () => {
     }
   };
 
-  const getDosages = async (date, cumValue = true) => {
-    // vaccine doses
-    const { data: _firstDose } = await AppService.getVaccines({
-      cumValue,
-      dosage: true,
-      dosageIdx: "first",
-      date,
-    });
-
-    const { data: _secondDose } = await AppService.getVaccines({
-      cumValue,
-      dosage: true,
-      dosageIdx: "second",
-      date,
-    });
-
-    const { data: _thirdDose } = await AppService.getVaccines({
-      cumValue,
-      dosage: true,
-      dosageIdx: "third",
-      date,
-    });
-
-    return {
-      _firstDose,
-      _secondDose,
-      _thirdDose,
-    };
-  };
-
+  // extract, format and returns all the data to be used to render charts on the overview page
   const getOverviewChartsData = async (date = "", refetch = true) => {
     setLoading(true);
     try {
+      // initialize the return and cache state variables
       let ageCases = {},
         deaths = [],
         healthcares = [],
@@ -224,32 +243,37 @@ const useApiRequest = () => {
         firstEpisodes = [],
         reinfections = [];
 
-      // if (date || !overviewState) {
-      if (!overviewState) {
+      // if there is no cached data for the charts
+      if (!overviewState || refetch) {
+        // fetch the distribution of dosages data
         const { _firstDose, _secondDose, _thirdDose } = await getDosages(date);
 
-        // vaccine doses
+        // set the dosages values
         firstDose = _firstDose;
         secondDose = _secondDose;
         thirdDose = _thirdDose;
 
-        // infections
+        // fetch and set the first episode distrubution data
         const { data: _firstEpisodes } = await AppService.getFirstEpisodes({
+          areaName,
           cumValue: true,
           date,
         });
         firstEpisodes = _firstEpisodes;
 
+        // fetch and set the reinfections distrubution data
         const { data: _reinfections } = await AppService.getReinfections({
+          areaName,
           cumValue: true,
           date,
         });
         reinfections = _reinfections;
       }
 
-      if (overviewState) {
+      // if all api data used in rendering all the overview charts have been fetched and cached locally,
+      if (overviewState && !refetch) {
+        //extract all the required data from the cache and the formatted data for the return values
         ageCaseDist = overviewState.ageCaseDist;
-
         deaths = formatDataToMonthAgg(overviewState.deaths);
         ageCases = overviewState.ageCases;
         healthcares = overviewState.healthcares;
@@ -259,28 +283,34 @@ const useApiRequest = () => {
         firstEpisodes = overviewState.firstEpisodes;
         reinfections = overviewState.reinfections;
       } else {
-        // age cases
+        // api data isn't cached and needs to be fetched
+
+        //fetch, extract and format age cases distribution data
         const { data: _ageCaseDist = [] } = await AppService.getCases({
+          areaName,
           cumValue: false,
           ageDemo: true,
         });
         ageCaseDist = _ageCaseDist;
         ageCases = formatAgecases(ageCaseDist);
 
+        // fetch, extract and set deaths distribution data
         const { data: _deaths } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
         });
         deaths = formatDataToMonthAgg(_deaths);
 
-        // healthcare data
+        //fetch, extract and set healthcare distribution data
         const { data: _healthcares } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           nation: true,
           date,
         });
-
         healthcares = formatByRegion(_healthcares, "areaName");
 
+        // set the fetched data in the overview state
         setOverviewState({
           cumHealthcares: _healthcares,
           ageCases,
@@ -310,6 +340,7 @@ const useApiRequest = () => {
         });
       }
 
+      // structure the return value
       const overview = {
         ageCases,
         deaths,
@@ -330,6 +361,7 @@ const useApiRequest = () => {
           { dose: "Boost", value: thirdDose[0]?.value },
         ],
       };
+      // return the overview charts data
       return overview;
     } catch (error) {
       console.log(error.stack);
@@ -338,29 +370,36 @@ const useApiRequest = () => {
     }
   };
 
+  // extract, format, and return vaccine cards data
   const getVaccineOverview = async (date = "", refetch = false) => {
     setLoading(true);
     try {
+      // initialize the return value variables
       let totalData = {},
         firstDoseData = {},
         secondDoseData = {},
         thirdDoseData = {},
         cumVaccineData = [];
 
-      // caching conditions
+      // check if vaccine overview data should be refetched or the vaccine data state is empty
       if ((!vaccineState && !overviewState && !date) || refetch) {
+        // fetch all doses accumulated data
         const { _firstDose, _secondDose, _thirdDose } = await getDosages(date);
 
-        // vaccine doses
+        // extract and set the dosages numbers form the returned data
         firstDoseData = _firstDose[0];
         secondDoseData = _secondDose[0];
         thirdDoseData = _thirdDose[0];
+
+        //fetch and extract total vaccinations number
         const { data: total } = await AppService.getVaccines({
+          areaName,
           cumValue: true,
           date,
         });
         totalData = total[0];
 
+        // save the vaccine fetched data in the vaccine state
         setVaccineState({
           ...vaccineState,
           overview: {
@@ -371,7 +410,11 @@ const useApiRequest = () => {
           },
         });
       } else if (vaccineState?.overview) {
+        // This block handles when the vaccine data cache contains the card data set in the previous block the last time
+        // this function was invoked
+
         if (!date) {
+          // extract and set total vaccine data from the cache if there's no date filter selection
           const {
             overview: { firstDose, secondDose, thirdDose, total },
           } = vaccineState;
@@ -380,7 +423,12 @@ const useApiRequest = () => {
           thirdDoseData = thirdDose;
           totalData = total;
         } else {
+          // if a filter date range has been selected
+
           if (vaccineState?.cumData) {
+            // This block caters for when date filter is chosen
+
+            //extract, format and set all total vaccine related data in the cache based on the filter date
             const {
               cumData: { total, firstDose, secondDose, thirdDose },
             } = vaccineState;
@@ -396,15 +444,21 @@ const useApiRequest = () => {
               value: getDataSum(filterForDate(thirdDose, date)),
             };
           } else {
+            // if there's no vaccine distribution stored in the vaccine state and date filter is selected
+
+            // fetch and extract the total vaccine data based on the date range
             const { data: vaccines } = await AppService.getVaccines({
+              areaName,
               cumValue: false,
             });
+            totalData = { value: getDataSum(filterForDate(vaccines, date)) };
+
+            // fetch all doses distribution data
             const { _firstDose, _secondDose, _thirdDose } = await getDosages(
               date,
               false
             );
-            // accumulate collected from supplied date till now
-            totalData = { value: getDataSum(filterForDate(vaccines, date)) };
+            // accumulate collected from supplied date till now and save in return variables
             firstDoseData = {
               value: getDataSum(filterForDate(_firstDose, date)),
             };
@@ -415,6 +469,7 @@ const useApiRequest = () => {
               value: getDataSum(filterForDate(_thirdDose, date)),
             };
 
+            // save the fetched vaccine data in the vaccine state
             setVaccineState({
               ...vaccineState,
               cumData: {
@@ -428,15 +483,21 @@ const useApiRequest = () => {
           }
         }
       } else {
+        // a backup cache incase the vaccine data is already cached in the matrics and overview state of the overview page
         if (!date) {
+          // if no date selected and there's value in both states
           if (metricsState && overviewState) {
+            // extract the cached vaccine data from the states
             const { firstDose, secondDose, thirdDose } = overviewState;
             const { vaccineData } = metricsState;
 
+            // extract and set the vaccine data numbers in the return value variables
             firstDoseData = firstDose[0] || {};
             secondDoseData = secondDose[0] || {};
             thirdDoseData = thirdDose[0] || {};
             totalData = vaccineData[0] || {};
+
+            // update the vaccine state with this data extracted from the metrics and overview state
             setVaccineState({
               ...vaccineState,
               overview: {
@@ -452,6 +513,7 @@ const useApiRequest = () => {
         }
       }
 
+      // return the numbers to be displayed on the vaccine page cards
       return {
         total: totalData?.value,
         firstDose: firstDoseData?.value,
@@ -465,8 +527,11 @@ const useApiRequest = () => {
     }
   };
 
-  const getVaccinationChartData = async (date = "") => {
+  // extract, formats and returns all the formatted data to render charts on vaccination page
+  const getVaccinationChartData = async (date = "", refetch = false) => {
     setLoading(true);
+
+    // initialize the return value vartiables
     let vaccineDemoData = [];
     let byDate = {},
       byAges = [],
@@ -474,21 +539,26 @@ const useApiRequest = () => {
       above50 = [],
       monthlyVaccines = [];
     try {
+      // if all api data used in rendering all the vaccination charts have not been cached locally,
       if (
         !vaccineState?.cumData?.firstDose ||
         !vaccineState?.cumData?.vaccineDemo
       ) {
+        // fetch and set the dosages demographic distribution data
         const { _firstDose, _secondDose, _thirdDose } = await getDosages(
           date,
           false
         );
+
+        // fetch, format and set the dosages distribution data
         const { data: vaccineDemo } = await AppService.getVaccineAgeDemo({
           cumValue: false,
+          areaName,
         });
         vaccineDemoData = vaccineDemo;
-
         monthlyVaccines = extractCompleteVacc(vaccineDemo);
 
+        // format all charts data
         byDate = {
           firstDose: formatVaccineData(_firstDose),
           secondDose: formatVaccineData(_secondDose),
@@ -524,6 +594,7 @@ const useApiRequest = () => {
             }
           : {};
 
+        // save the fetched data in the cache
         setVaccineState({
           ...vaccineState,
           cumData: {
@@ -534,6 +605,9 @@ const useApiRequest = () => {
           },
         });
       } else {
+        /**
+         * retrieve, format and set extracted data from the vaccine cache
+         */
         const {
           cumData: { firstDose, secondDose, thirdDose, vaccineDemo } = {},
         } = vaccineState || {};
@@ -576,6 +650,7 @@ const useApiRequest = () => {
           : {};
       }
 
+      // return the vaccine charts data
       return {
         byDate,
         byAges,
@@ -605,6 +680,7 @@ const useApiRequest = () => {
       if ((!caseState?.overview && !caseState?.newData && !date) || refetch) {
         // fetch and extract the total number of cases
         const { data: _totalData } = await AppService.getCases({
+          areaName,
           cumValue: true,
         });
         total = _totalData[0].value;
@@ -612,17 +688,20 @@ const useApiRequest = () => {
         // fetch and extract the total number of reinfection cases
         const { data: _reinfections } = await AppService.getReinfections({
           cumValue: true,
+          areaName,
         });
         reinfections = _reinfections[0].value;
 
         // fetch and extract the total number of first episode cases
         const { data: _firstEpisodes } = await AppService.getFirstEpisodes({
           cumValue: true,
+          areaName,
         });
         firstEpisodes = _firstEpisodes[0].value;
 
         // fetch and extract the current case rate
         const { data: caseRate } = await AppService.getCases({
+          areaName,
           cumValue: true,
           rate: true,
         });
@@ -644,7 +723,7 @@ const useApiRequest = () => {
         // this function was invoked
 
         if (!date) {
-          // fetch and set data from the cache if there's no date filter selection
+          // extract and set data from the cache if there's no date filter selection
           total = caseState?.overview?.total;
           reinfections = caseState?.overview?.reinfections;
           firstEpisodes = caseState?.overview?.firstEpisodes;
@@ -666,6 +745,7 @@ const useApiRequest = () => {
 
         // fetch all case distribution over time.
         const { data: caseDist = [] } = await AppService.getCases({
+          areaName,
           cumValue: false,
           newCases: true,
         });
@@ -680,6 +760,7 @@ const useApiRequest = () => {
         const { data: firstEpisodesDist } = await AppService.getFirstEpisodes({
           cumValue: false,
           newCases: true,
+          areaName,
         });
 
         // filter the fetched data distribution to get the accumulatiom of the collected data over the date range selected
@@ -692,6 +773,7 @@ const useApiRequest = () => {
           rate = caseState?.overview?.rate || caseState?.newData?.rate;
         } else {
           const { data: caseRate } = await AppService.getCases({
+            areaName,
             cumValue: true,
             rate: true,
           });
@@ -721,7 +803,7 @@ const useApiRequest = () => {
   };
 
   // returns data for all charts rendered on cases page
-  const getCasesChartData = async (date = "") => {
+  const getCasesChartData = async (date = "", refetch = false) => {
     setLoading(true);
     let caseTypes = {},
       byAge = [],
@@ -729,7 +811,7 @@ const useApiRequest = () => {
       monthlyCases = [];
     try {
       // if all api data used in rendering all the case charts have been fecthed and cached locally,
-      if (caseState?.cumData) {
+      if (caseState?.cumData && !refetch) {
         // extracts the cached data from the case state
         const {
           cumFirstEpisodesDist,
@@ -753,22 +835,26 @@ const useApiRequest = () => {
         // fetch the renfections data
         const { data: cumReinfectionsDist } = await AppService.getReinfections({
           cumValue: false,
+          areaName,
         });
 
         // fetch first episodes data
         const { data: cumFirstEpisodesDist } =
           await AppService.getFirstEpisodes({
             cumValue: false,
+            areaName,
           });
 
         // fetch all data set for age demography since the start of covid
         const { data: cumAgeDist = [] } = await AppService.getCases({
+          areaName,
           cumValue: false,
           ageDemo: true,
         });
 
         // all data sets of covid new cases
         const { data: cumAge = [] } = await AppService.getCases({
+          areaName,
           cumValue: false,
           nation: true,
           newCases: true,
@@ -821,12 +907,14 @@ const useApiRequest = () => {
       if ((!deathState?.overview && !deathState?.newData && !date) || refetch) {
         // fetch and extract the total number of deaths
         const { data: deaths } = await AppService.getDeaths({
+          areaName,
           cumValue: true,
         });
         total = deaths[0]?.value;
 
         // fetch and extract the number of deaths after 28 days of testing positive
         const { data: cum28 } = await AppService.getDeaths({
+          areaName,
           cumValue: true,
           within28: true,
         });
@@ -834,6 +922,7 @@ const useApiRequest = () => {
 
         // fetch and extract the number of deaths after 60 days of testing positive
         const { data: cum60 } = await AppService.getDeaths({
+          areaName,
           cumValue: true,
           within60: true,
         });
@@ -841,6 +930,7 @@ const useApiRequest = () => {
 
         // fetcha and extract the most recent death rate
         const { data: deathRate } = await AppService.getDeaths({
+          areaName,
           cumValue: true,
           rate: true,
         });
@@ -882,18 +972,21 @@ const useApiRequest = () => {
 
         // fetch new death reports the start of covid
         const { data: deathsDist } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
           newDeaths: true,
         });
 
         // fetch death within 28 days of testing positive data distribution
         const { data: within28Dist } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
           within28: true,
         });
 
         // fetch death within 60 days of testing positive data distribution
         const { data: within60Dist } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
           within28: true,
         });
@@ -906,6 +999,7 @@ const useApiRequest = () => {
           rate = deathState?.overview?.rate;
         } else {
           const { data: deathRate } = await AppService.getDeaths({
+            areaName,
             cumValue: true,
             rate: true,
           });
@@ -949,7 +1043,7 @@ const useApiRequest = () => {
       within60Demo = [];
     try {
       // if all api data used in rendering all the deaths charts have been fetched and cached locally,
-      if (deathState?.cumData) {
+      if (deathState?.cumData && !refetch) {
         // extracts the cached data from the deaths state
         const {
           deathsDist,
@@ -970,24 +1064,28 @@ const useApiRequest = () => {
 
         // gets the distribution of deaths over the covid period
         const { data: deathsDist } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
           newDeaths: true,
         });
 
         // gets the distribution of deaths of people who died 28 days after testing positive over the covid period
         const { data: within28Dist } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
           within28: true,
         });
 
         // gets the distribution of deaths of people who died 60 days after testing positive over the covid period
         const { data: within60Dist } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
           within60: true,
         });
 
         // the age demography of people who have died within the 28 days of contracting the virus
         const { data: within28DemoDist } = await AppService.getDeaths({
+          areaName,
           cumValue: false,
           demo: true,
           within28: true,
@@ -1031,7 +1129,7 @@ const useApiRequest = () => {
     }
   };
 
-  // returns data for all cards rendered on healthcare page
+  //extracts, formats and returns data for all cards rendered on healthcare page
   const getHealthcareOverview = async (date = "", refetch = false) => {
     setLoading(true);
     let total = {},
@@ -1046,12 +1144,14 @@ const useApiRequest = () => {
       ) {
         // fetch and extract the total number of admissions
         const { data: healthcare } = await AppService.getHealthcare({
+          areaName,
           cumValue: true,
         });
         total = healthcare[0]?.value;
 
         // fetch and extract the total number of admissions on ventilation beds
         const { data: ventilation } = await AppService.getHealthcare({
+          areaName,
           cumValue: true,
           ventilation: true,
         });
@@ -1059,6 +1159,7 @@ const useApiRequest = () => {
 
         // fetch and extract the current admisison rate
         const { data: healthcareRate } = await AppService.getHealthcare({
+          areaName,
           cumValue: true,
           rate: true,
         });
@@ -1066,6 +1167,7 @@ const useApiRequest = () => {
 
         // fetch and extract all COVID-19 patients currently in hospital
         const { data: hospital } = await AppService.getHealthcare({
+          areaName,
           cumValue: true,
           hospital: true,
         });
@@ -1104,12 +1206,14 @@ const useApiRequest = () => {
       } else {
         // fetch all new admissions entries over the period.
         const { data: healthcareDist } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           newAdm: true,
         });
 
         // fetch all new ventilation admissions entries over the period.
         const { data: ventilationDist } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           ventilation: true,
           newAdm: true,
@@ -1117,6 +1221,7 @@ const useApiRequest = () => {
 
         // fetch the hospital intake record
         const { data: hospitalDist } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           hospital: true,
           newAdm: true,
@@ -1124,6 +1229,7 @@ const useApiRequest = () => {
 
         // fetch the age demography data over the years
         const { data: ageDist } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           age: true,
         });
@@ -1161,16 +1267,17 @@ const useApiRequest = () => {
     }
   };
 
-  // returns all the formatted data to render charts on healthcare page
-  const getHealthcareChartData = async () => {
+  // extract, formats and returns all the formatted data to render charts on healthcare page
+  const getHealthcareChartData = async (date = "", refetch = false) => {
     setLoading(true);
+    // initialize the return value variables
     let allAds = [],
       ventilationBed = [],
       inHospital = [],
       byAge = [];
     try {
       // if all api data used in rendering all the healthcare charts have been fetched and cached locally,
-      if (healthcareState?.cumData || healthcareState?.newData) {
+      if ((healthcareState?.cumData || healthcareState?.newData) && !refetch) {
         // extracts the cached data from the healthcare state state
         const { healthcareDist, ventilationDist, hospitalDist, ageDist } =
           healthcareState.cumData || healthcareState.newData;
@@ -1183,12 +1290,14 @@ const useApiRequest = () => {
       } else {
         // fetch all admissions entries over the period.
         const { data: healthcareDist } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           Adm: true,
         });
 
         // fetch all new ventilation admissions entries over the period.
         const { data: ventilationDist } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           ventilation: true,
           newAdm: true,
@@ -1196,6 +1305,7 @@ const useApiRequest = () => {
 
         // fetch the hospital patients over time with age demography
         const { data: hospitalDist } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           hospital: true,
           newAdm: true,
@@ -1203,6 +1313,7 @@ const useApiRequest = () => {
 
         // fetch all admissions entries with age demography over the period.
         const { data: ageDist } = await AppService.getHealthcare({
+          areaName,
           cumValue: false,
           age: true,
         });

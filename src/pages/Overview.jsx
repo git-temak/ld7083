@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useApiRequest } from "../hooks";
 import tw, { styled } from "twin.macro";
 import {
@@ -14,11 +14,15 @@ import {
   ChartWrapperOneQuarter,
 } from "../components";
 import { chartAgeSeries, chartMultiSeries } from "../utils";
+import { appContext } from "../contexts";
 
 const Overview = () => {
+  const { areaName } = useContext(appContext);
   const { getOverviewChartsData, getOverviewCardData } = useApiRequest();
+
   const [overviewData, setOverviewData] = useState();
   const [chartData, setChartData] = useState();
+  const [filterDate, setFilterDate] = useState();
   const {
     deaths = [],
     healthcares = [],
@@ -63,16 +67,21 @@ const Overview = () => {
     }
   };
 
-  const updateChartDataByDate = async (date) => {
-    const filteredByDate = await getOverviewChartsData(date);
-    const filteredCardData = await getOverviewCardData(date);
+  const updateChartDataByDate = async (date, refetch = false) => {
+    const filteredByDate = await getOverviewChartsData(date, refetch);
+    const filteredCardData = await getOverviewCardData(date, refetch);
     setChartData(filteredByDate);
     setOverviewData(filteredCardData);
+    setFilterDate(date);
   };
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    updateChartDataByDate(filterDate, true);
+  }, [areaName]);
   return (
     <PageContainer>
       <MetricsSection

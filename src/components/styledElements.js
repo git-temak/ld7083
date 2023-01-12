@@ -33,7 +33,7 @@ export const Flex = styled.div`
 `;
 
 export const FlexRes = styled.div`
-  ${tw`w-full lg:flex`}
+  ${tw`w-full lg:w-auto lg:flex`}
 `;
 
 export const Label = styled.label`
@@ -91,4 +91,8 @@ export const AppLayoutWrapper = styled(FlexCol)`
 `;
 export const HeaderWrapper = styled.header`
   ${tw`w-full`}
+`;
+
+export const LogoWrapper = styled(FlexBetweenRes)`
+  ${tw`p-5`}
 `;

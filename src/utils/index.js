@@ -192,6 +192,7 @@ export const formatDataToMonthAgg = (data, isCum = true) => {
 };
 
 export const extractCompleteVacc = (data) => {
+  if (!data) return [];
   const initResult = {};
   data?.forEach((c) => {
     if (!(c.date.slice(0, 7) in initResult)) {
@@ -218,13 +219,13 @@ export const chartMultiSeries = (data, y = "value", x = "date") => {
   return {
     yval: Object.entries(data).map(([key, value]) => ({
       name: key,
-      data: value.map((d) => d[y]),
+      data: value?.map((d) => (d ? d[y] : 0)),
     })),
     xval: [
       ...new Set(
         Object.values(data)
           .flat()
-          .map((v) => (x === "age" ? v.age.split("_").join("-") : v[x]))
+          .map((v) => (x === "age" ? v.age.split("_").join("-") : v ? v[x] : 0))
       ),
     ],
   };

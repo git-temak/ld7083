@@ -1,15 +1,19 @@
 import axiosInstance from "../core/api/baseAxios";
 
 class AppService {
+  // return response for cases api request
   static async getCases({ cumValue = false, ...data }) {
+    // extract the arguments values
     const {
       ageDemo = false,
       ageSex = false,
       newCases = false,
       nation = false,
       rate = false,
+      areaName = "",
     } = data || {};
 
+    // construct the api request parameter structure
     const params = {
       filters: `areaType=overview`,
       latestBy: "cumCasesByPublishDate",
@@ -21,6 +25,9 @@ class AppService {
       },
     };
 
+    /******************************************************************
+     * modify the paramer structure based on supplioed function arguments
+     ******************************************************************/
     if (ageDemo) {
       params.filters = "areaType=nation";
       params.structure.value = "newCasesBySpecimenDateAgeDemographics";
@@ -38,17 +45,29 @@ class AppService {
       params.latestBy = "femaleCases";
     }
     if (nation) params.filters = "areaType=nation";
+    if (!!areaName) {
+      params.filters = `areaType=nation;areaName=${areaName}`;
+    }
+
+    /******************************************************************
+     * format the endpoint point using the parameter structure
+     ******************************************************************/
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
       (cumValue ? `latestBy=${params.latestBy}&` : "") +
       `structure=${JSON.stringify(params.structure)}`;
 
+    /******************************************************************
+     * Make api request and send back the response
+     ******************************************************************/
     const req = await axiosInstance.get(endpoint);
     return req?.data || req;
   }
 
+  // return response for deaths api request
   static async getDeaths({ cumValue = false, ...data }) {
+    // extract the arguments values
     const {
       rate = false,
       date = "",
@@ -56,8 +75,10 @@ class AppService {
       within28 = false,
       within60 = false,
       demo = false,
+      areaName = "",
     } = data;
 
+    // construct the api request parameter structure
     const params = {
       filters: "areaType=overview",
       latestBy: "cumOnsDeathsByRegistrationDate",
@@ -67,6 +88,10 @@ class AppService {
         value: "cumOnsDeathsByRegistrationDate",
       },
     };
+
+    /******************************************************************
+     * modify the paramer structure based on supplioed function arguments
+     ******************************************************************/
     if (rate) {
       params.structure.value = "cumOnsDeathsByRegistrationDateRate";
       params.latestBy = "cumOnsDeathsByRegistrationDateRate";
@@ -105,24 +130,38 @@ class AppService {
       }
     }
 
+    if (!!areaName) {
+      params.filters = `areaType=nation;areaName=${areaName}`;
+    }
+
+    /******************************************************************
+     * format the endpoint point using the parameter structure
+     ******************************************************************/
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
       (cumValue ? `latestBy=${params.latestBy}&` : "") +
       `structure=${JSON.stringify(params.structure)}`;
+
+    /******************************************************************
+     * Make api request and send back the response
+     ******************************************************************/
     const req = await axiosInstance.get(endpoint);
     return req?.data || req;
   }
 
-  // overview card details
+  // returns response for  vaccines api request
   static async getVaccines({ cumValue = false, ...data }) {
+    // extract the arguments values
     const {
       dosage = false,
       weekly = false,
       dosageIdx = "first",
       date = "",
+      areaName = "",
     } = data || {};
 
+    // conditionally set dosages structure item name options
     let dosageOptions = Object.freeze({
       first: "cumPeopleVaccinatedFirstDoseByPublishDate",
       second: "cumPeopleVaccinatedSecondDoseByPublishDate",
@@ -144,6 +183,7 @@ class AppService {
       });
     }
 
+    // construct the api request parameter structure
     const params = {
       filters: "areaType=overview",
       latestBy: "cumVaccinesGivenByPublishDate",
@@ -154,6 +194,9 @@ class AppService {
       },
     };
 
+    /******************************************************************
+     * modify the paramer structure based on supplioed function arguments
+     ******************************************************************/
     if (dosage) {
       params.latestBy = dosageOptions[dosageIdx];
       params.structure.value = dosageOptions[dosageIdx];
@@ -162,17 +205,35 @@ class AppService {
       params.structure.value = "newVaccinesGivenByPublishDate";
     }
     if (date && cumValue) params.filters += `;date=${date}`;
+
+    if (!!areaName) {
+      params.filters = `areaType=nation;areaName=${areaName}`;
+    }
+
+    /******************************************************************
+     * format the endpoint point using the parameter structure
+     ******************************************************************/
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
       (cumValue ? `latestBy=${params.latestBy}&` : "") +
       `structure=${JSON.stringify(params.structure)}`;
 
+    /******************************************************************
+     * Make api request and send back the response
+     ******************************************************************/
+
     const req = await axiosInstance.get(endpoint);
     return req?.data || req;
   }
 
-  static async getVaccineAgeDemo({ cumValue = false, date = "" }) {
+  // returns response for api request of vaccine age demography request
+  static async getVaccineAgeDemo({
+    cumValue = false,
+    date = "",
+    areaName = "",
+  }) {
+    // construct the api request parameter structure
     const params = {
       filters: "areaType=nation",
       structure: {
@@ -182,16 +243,30 @@ class AppService {
       },
     };
 
+    /******************************************************************
+     * modify the paramer structure based on supplioed function arguments
+     ******************************************************************/
+    if (!!areaName) {
+      params.filters = `areaType=nation;areaName=${areaName}`;
+    }
+
+    /******************************************************************
+     * format the endpoint point using the parameter structure
+     ******************************************************************/
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
       (cumValue ? `latestBy=${params.latestBy}&` : "") +
       `structure=${JSON.stringify(params.structure)}`;
 
+    /******************************************************************
+     * Make api request and send back the response
+     ******************************************************************/
     const req = await axiosInstance.get(endpoint);
     return req?.data || req;
   }
 
+  // return api response for healthcare request
   static async getHealthcare({
     cumValue = false,
     date = "",
@@ -201,7 +276,9 @@ class AppService {
     nation = false,
     age = false,
     rate = false,
+    areaName = "",
   }) {
+    // construct the api request parameter structure
     const params = {
       filters: "areaType=overview",
       latestBy: "cumAdmissions",
@@ -211,6 +288,10 @@ class AppService {
         value: "cumAdmissions",
       },
     };
+
+    /******************************************************************
+     * modify the paramer structure based on supplioed function arguments
+     ******************************************************************/
     if (!cumValue && nation) {
       params.filters = "areaType=nation";
     }
@@ -233,60 +314,102 @@ class AppService {
       params.structure.value = "newAdmissionsChangePercentage";
       params.latestBy = "newAdmissionsChangePercentage";
     }
+    if (!!areaName) {
+      params.filters = `areaType=nation;areaName=${areaName}`;
+    }
+
+    /******************************************************************
+     * format the endpoint point using the parameter structure
+     ******************************************************************/
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
       (cumValue ? `latestBy=${params.latestBy}&` : "") +
       `structure=${JSON.stringify(params.structure)}`;
 
+    /******************************************************************
+     * Make api request and send back the response
+     ******************************************************************/
     const req = await axiosInstance.get(endpoint);
     return req?.data || req;
   }
 
+  // return response for reinfections api request
   static async getReinfections({
     cumValue = false,
     date = "",
     newCases = false,
+    areaName = "",
   }) {
+    // construct the api request parameter structure
     const params = {
       filters: "areaType=overview",
       latestBy: "cumReinfectionsBySpecimenDate",
       structure: { date: "date", value: "cumReinfectionsBySpecimenDate" },
     };
+
+    /******************************************************************
+     * modify the paramer structure based on supplioed function arguments
+     ******************************************************************/
     if (date && cumValue) params.filters += `;date=${date}`;
     if (!cumValue && newCases)
       params.structure.value = "newReinfectionsBySpecimenDate";
+    if (!!areaName) {
+      params.filters = `areaType=nation;areaName=${areaName}`;
+    }
 
+    /******************************************************************
+     * format the endpoint point using the parameter structure
+     ******************************************************************/
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
       (cumValue ? `latestBy=${params.latestBy}&` : "") +
       `structure=${JSON.stringify(params.structure)}`;
 
+    /******************************************************************
+     * Make api request and send back the response
+     ******************************************************************/
     const req = await axiosInstance.get(endpoint);
     return req?.data || req;
   }
 
+  // return response for episodes api request
   static async getFirstEpisodes({
     cumValue = false,
     date = "",
     newCases = false,
+    areaName = "",
   }) {
+    // construct the api request parameter structure
     const params = {
       filters: "areaType=overview",
       latestBy: "cumFirstEpisodesBySpecimenDate",
       structure: { date: "date", value: "cumFirstEpisodesBySpecimenDate" },
     };
+
+    /******************************************************************
+     * modify the paramer structure based on supplied function arguments
+     ******************************************************************/
     if (date && cumValue) params.filters += `;date=${date}`;
     if (!cumValue && newCases)
       params.structure.value = "newFirstEpisodesBySpecimenDate";
+    if (!!areaName) {
+      params.filters = `areaType=nation;areaName=${areaName}`;
+    }
 
+    /******************************************************************
+     * format the endpoint point using the parameter structure
+     ******************************************************************/
     const endpoint =
       "?" +
       `filters=${params.filters}&` +
       (cumValue ? `latestBy=${params.latestBy}&` : "") +
       `structure=${JSON.stringify(params.structure)}`;
 
+    /******************************************************************
+     * Make api request and send back the response
+     ******************************************************************/
     const req = await axiosInstance.get(endpoint);
     return req?.data || req;
   }
