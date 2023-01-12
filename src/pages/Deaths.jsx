@@ -12,6 +12,7 @@ import {
 import { useApiRequest } from "../hooks";
 import ArrowUp from "../assets/icons/arrow-up.svg";
 import ArrowDown from "../assets/icons/arrow-down.svg";
+import { chartAgeSeries } from "../utils";
 
 const Deaths = () => {
   /*************
@@ -112,13 +113,11 @@ const Deaths = () => {
           </ChartWrapperHalf>
           <ChartWrapperHalf>
             <BarChart
+              scaleFactor={8}
               title="Deaths within 28 days of positive test by age"
               ylabel="Deaths"
               description="An overview of the total number of people who died from COVID-19 within 28 days of testing positive since the start of pandemic based on age. "
-              data={{
-                xval: Object.keys(within28Demo),
-                yval: Object.values(within28Demo),
-              }}
+              data={chartAgeSeries(within28Demo)}
             />
           </ChartWrapperHalf>
         </FlexContainerRes>

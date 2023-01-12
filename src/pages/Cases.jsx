@@ -106,7 +106,7 @@ const Cases = () => {
               ylabel="Cases"
               description="An overview of the total number of COVID-19 cases since the start of pandemic based on ages. "
               data={{
-                xval: Object.keys(byAge),
+                xval: Object.keys(byAge).map((age) => age.split("_").join("-")),
                 yval: Object.values(byAge),
               }}
             />

@@ -13,7 +13,7 @@ import {
   ChartWrapperHalf,
   ChartWrapperOneQuarter,
 } from "../components";
-import { chartMultiSeries } from "../utils";
+import { chartAgeSeries, chartMultiSeries } from "../utils";
 
 const Overview = () => {
   const { getOverviewChartsData, getOverviewCardData } = useApiRequest();
@@ -95,13 +95,11 @@ const Overview = () => {
           </ChartWrapperHalf>
           <ChartWrapperHalf>
             <BarChart
+              scaleFactor={10}
               title="COVID-19 cases by age"
               ylabel="Cases"
               description="An overview of the total number of COVID-19 cases since the start of pandemic based on ages. "
-              data={{
-                xval: Object.keys(ageCases),
-                yval: Object.values(ageCases),
-              }}
+              data={chartAgeSeries(ageCases)}
             />
           </ChartWrapperHalf>
         </FlexContainerRes>

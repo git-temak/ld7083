@@ -143,8 +143,7 @@ const AppLayout = () => {
           <p className="title">Disclaimer:</p>
           <p className="body-text">
             All data is retrieved directly from{" "}
-            <a className="underline" href="https://coronavirus.data.gov.uk/details/developers-guide">gov.uk </a>and no information is stored
-            directly on this site.
+            <a className="underline" href="https://coronavirus.data.gov.uk/details/developers-guide">gov.uk </a>and no information is stored.
           </p>
           <YSpacer margin="1rem" />
           <p className="title">About Data:</p>

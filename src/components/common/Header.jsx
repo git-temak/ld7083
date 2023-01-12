@@ -10,13 +10,15 @@ const DataUpdateText = styled.p`
 const LogoWrapper = styled(FlexBetween)`
   ${tw`p-5`}
 `;
-const Header = () => {
+const Header = ({ updateTime = true }) => {
   const { loading, lastUpdate } = useContext(appContext);
   return (
     <HeaderWrapper>
       <LogoWrapper>
         <Logo />
-        <DataUpdateText>Last Updated: {lastUpdate}.</DataUpdateText>
+        {updateTime && (
+          <DataUpdateText>Last Updated: {lastUpdate}</DataUpdateText>
+        )}
       </LogoWrapper>
     </HeaderWrapper>
   );

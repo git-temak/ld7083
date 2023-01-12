@@ -10,6 +10,7 @@ const BarChart = ({
   xlabel = "xaxis",
   ylabel = "yaxis",
   dateExtra,
+  scaleFactor = false,
 }) => {
   const chartConfig = {
     options: {
@@ -56,6 +57,8 @@ const BarChart = ({
       width={width}
       type="bar"
       height={horizontal ? "300px" : "350px"}
+      useScale={!!scaleFactor}
+      scaleFactor={scaleFactor}
     />
   );
 };

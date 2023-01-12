@@ -50,7 +50,7 @@ const CenterDiv = styled(FlexContainer)`
 const Info = () => {
   return (
     <AppLayoutWrapper>
-      <Header />
+      <Header updateTime={false} />
       <DashWrapper>
         <Link to={"/"}>
           <FlexContainer className="gap-x-2">

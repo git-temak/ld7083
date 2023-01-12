@@ -12,6 +12,7 @@ import { useApiRequest } from "../hooks";
 
 import ArrowUp from "../assets/icons/arrow-up.svg";
 import ArrowDown from "../assets/icons/arrow-down.svg";
+import { chartAgeSeries } from "../utils";
 
 const Healthcare = () => {
   /*************
@@ -101,10 +102,7 @@ const Healthcare = () => {
               title="Patients admitted to hospital by age"
               ylabel="Admissions"
               description="An overview of the number of patients who are admitted to hospital due to COVID-19 since the start of pandemic based on age. "
-              data={{
-                xval: Object.keys(byAge),
-                yval: Object.values(byAge),
-              }}
+              data={chartAgeSeries(byAge)}
             />
           </ChartWrapperHalf>
         </FlexContainerRes>

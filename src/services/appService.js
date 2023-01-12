@@ -4,6 +4,7 @@ class AppService {
   static async getCases({ cumValue = false, ...data }) {
     const {
       ageDemo = false,
+      ageSex = false,
       newCases = false,
       nation = false,
       rate = false,
@@ -30,6 +31,11 @@ class AppService {
     if (rate) {
       params.structure.value = "newCasesByPublishDateChangePercentage";
       params.latestBy = "newCasesByPublishDateChangePercentage";
+    }
+    if (ageSex) {
+      params.filters = "areaType=nation";
+      params.structure = { femaleCases: "femaleCases", maleCases: "maleCases" };
+      params.latestBy = "femaleCases";
     }
     if (nation) params.filters = "areaType=nation";
     const endpoint =

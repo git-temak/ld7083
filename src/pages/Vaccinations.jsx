@@ -12,10 +12,10 @@ import {
   FlexContainerRes,
 } from "../components";
 import { useApiRequest } from "../hooks";
-import { decToFixed } from "../utils";
+import { chartMultiSeries, decToFixed } from "../utils";
 
 const Vaccinations = () => {
-  const { getVaccinationCardData, getVaccineOverview } = useApiRequest();
+  const { getVaccinationChartData, getVaccineOverview } = useApiRequest();
   const [vaccineOverview, setVaccineOverview] = useState();
   const [chartData, setChartData] = useState();
   const {
@@ -49,37 +49,14 @@ const Vaccinations = () => {
           name: dose[0].toUpperCase() + dose.slice(1),
           data: value?.map((v) => decToFixed(v.value / 100000, 2)),
         })),
-        xval: byAges?.firstDose?.map((v) => v.age),
+        xval: byAges?.firstDose
+          ?.map((v) => v.age)
+          .map((age) => age.split("_").join("-")),
       }
     : {};
 
-  const refinedBelow50 = {
-    yval: Object.entries(belowTo50)?.map(([age, value]) => ({
-      name: age,
-      data: value.map((d) => d.value),
-    })),
-    xval: [
-      ...new Set(
-        Object.values(belowTo50)
-          ?.flat()
-          .map((v) => v.date)
-      ),
-    ],
-  };
-
-  const refinedAbove50 = {
-    yval: Object.entries(above50)?.map(([age, value]) => ({
-      name: age,
-      data: value.map((d) => d.value),
-    })),
-    xval: [
-      ...new Set(
-        Object.values(belowTo50)
-          ?.flat()
-          .map((v) => v.date)
-      ),
-    ],
-  };
+  const refinedBelow50 = chartMultiSeries(belowTo50, "value", "date");
+  const refinedAbove50 = chartMultiSeries(above50, "value", "date");
 
   const cardsDetails = Object.freeze([
     {
@@ -107,7 +84,7 @@ const Vaccinations = () => {
 
   // fetches cards and chart data on page initial render
   const loadData = async () => {
-    const chartsData = await getVaccinationCardData("", true);
+    const chartsData = await getVaccinationChartData("", true);
     const data = await getVaccineOverview("", true);
 
     if (data) setVaccineOverview(data);
@@ -118,7 +95,7 @@ const Vaccinations = () => {
 
   // filters data by provided date
   const updateChartDataByDate = async (date) => {
-    const filteredByDate = await getVaccinationCardData(date);
+    const filteredByDate = await getVaccinationChartData(date);
     const filteredCardByDate = await getVaccineOverview(date);
 
     setChartData(filteredByDate);
@@ -128,6 +105,7 @@ const Vaccinations = () => {
   useEffect(() => {
     loadData();
   }, []);
+
   return (
     <PageContainer>
       <MetricsSection

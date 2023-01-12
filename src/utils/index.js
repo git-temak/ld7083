@@ -1,3 +1,5 @@
+const flaggedKeys = ["00_59", "50+", "60+", "75+", "90+", "unassigned"];
+
 export const filterForDate = (data = [], date = "") => {
   if (!date) return data;
   return data.filter((d) => new Date(d.date) >= new Date(date));
@@ -54,11 +56,13 @@ export const formatByAge = (data, valueKey = "deaths", isCum = false) => {
   const result = {};
   data?.forEach((c) => {
     c?.value?.forEach((d) => {
-      if (d.age in result)
-        result[d.age] = isCum
-          ? greaterVal(d[valueKey], result[d.age])
-          : result[d.age] + d[valueKey];
-      else result[d.age] = d[valueKey];
+      if (!flaggedKeys.includes(d.age)) {
+        if (d.age in result)
+          result[d.age] = isCum
+            ? greaterVal(d[valueKey], result[d.age])
+            : result[d.age] + d[valueKey];
+        else result[d.age] = d[valueKey];
+      }
     });
   });
   return result;
@@ -69,8 +73,10 @@ export const formatAgecases = (ageCaseDist) => {
   const ageCases = {};
   ageCaseDist?.forEach((c) => {
     c?.value?.forEach((d) => {
-      if (d.age in ageCases) ageCases[d.age] += d.cases;
-      else ageCases[d.age] = d.cases;
+      if (!flaggedKeys.includes(d.age)) {
+        if (d.age in ageCases) ageCases[d.age] += d.cases;
+        else ageCases[d.age] = d.cases;
+      }
     });
   });
   return ageCases;
@@ -218,9 +224,17 @@ export const chartMultiSeries = (data, y = "value", x = "date") => {
       ...new Set(
         Object.values(data)
           .flat()
-          .map((v) => v[x])
+          .map((v) => (x === "age" ? v.age.split("_").join("-") : v[x]))
       ),
     ],
+  };
+};
+
+// used to change age index from form "a_b" to "a-b"
+export const chartAgeSeries = (data) => {
+  return {
+    xval: Object.keys(data).map((age) => age.split("_").join("-")),
+    yval: Object.values(data),
   };
 };
 
