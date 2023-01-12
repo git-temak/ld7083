@@ -13,10 +13,10 @@ import {
   formatByAge,
 } from "../utils";
 
-/*************************************************************************************************************
- * This hook returns necessary functions carrying out API calls and data manipulation required to display used
- * to display card and chart information across all pages
- ************************************************************************************************************/
+/****************************************************************************************************************
+ * This hook returns necessary functions carrying out API calls and data manipulation required to display metric
+ * card and chart information across all pages
+ ***************************************************************************************************************/
 
 const useApiRequest = () => {
   // the application state store in the app cntext
@@ -745,7 +745,6 @@ const useApiRequest = () => {
         };
         // format for cases by age, cases by region and cumulative monthly cases
         byAge = formatAgecases(cumAgeDist);
-        console.log({ byAge });
         byRegion = formatByRegion(cumAge);
         monthlyCases = formatDataToMonthAgg(cumAge, false);
       } else {
